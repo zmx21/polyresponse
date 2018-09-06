@@ -1,0 +1,3 @@
+sh ./convertGen2Plink_v1.0.sh 'sbp_chr10.bgen' 'ukbb_eur_all_sbp.sample' 'sbp_chr10'
+#Convert binary files to text files
+plink --bfile sbp_chr10 --recode tab --out sbp_chr10 --allow-no-sex
