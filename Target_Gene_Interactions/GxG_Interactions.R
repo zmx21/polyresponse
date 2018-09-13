@@ -1,22 +1,46 @@
-RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS){
-  chunkSize=100000
+library(RcppEigen)
+#Function which calculates significance of interaction between two SNPs
+CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes){
+  #Create model matrix, with interaction between SNPs.
+  mdlMat <- cbind('Intercept' = rep(1,length(dosageSubMatrix)),'InteractingSNP' = dosageSubMatrix,'TargetSNP' = dosageTarget,'Interaction' = dosageSubMatrix * dosageTarget)
+  fit <- RcppEigen::fastLm(y = phenotypes,X = mdlMat)
+  # #Merge into data frame
+  # data <- data.frame(SNP1=dosageSubMatrix,SNP2=dosageTarget,Pheno=as.numeric(phenotypes))
+  # #Linear model, with GxG interaction plus individual main effect
+  # fit <- lm('Pheno~SNP1*SNP2',data = data)
+  #Return significance of interaction term
+  return(summary(fit)$coefficients[4,c(4,1)])
+}
+
+RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores){
+  chunkSize=100
   
   library(dplyr)
   library(parallel)
   library(data.table)
+  library(pbmcapply)
   source('LoadBgen.R')
   
+  #Genotype info of target gene
+  target_file_prefix <- gsub(pattern = '#',replacement = target_chr,x = bgen_file_prefix)
+  dosageTarget <- LoadBgen(path,target_file_prefix,data.frame(rsid=targetRS))
+  dosageTarget <- dosageTarget$data
+  dosageTarget <- matrix(0,nrow = nrow(dosageTarget),ncol = ncol(dosageTarget)) + dosageTarget[,,'g=1'] + 2*dosageTarget[,,'g=2']
+  
+  #Generate prefix
+  bgen_file_prefix <- gsub(pattern = '#',replacement = chr,x = bgen_file_prefix)
+  
   #Find all rsids, and generate chunks to read.
-  allRSIds <- FindAllRSIds(path,bgen_file_prefix) %>% dplyr::filter(rsid!=targetRS)
+  print('Loading rsID')
+  allRSIds <- FindAllRSIds(path,bgen_file_prefix) %>% dplyr::filter(rsid!=targetRS) %>% dplyr::distinct(rsid)
   rsIDChunks <- split(allRSIds,seq(nrow(allRSIds)-1)%/%chunkSize)
+  print('Loading Samples')
   samplesTbl <- LoadSamples(path,sample_file_prefix)
   
-  #Intialize results vector
-  resultsTbl <- data.frame('rsid'=rep('',nrow(allRSIds)),'p' = rep(NA,nrow(allRSIds)), 'coeff'=rep(NA,nrow(allRSIds)),stringsAsFactors = F)
-  
-  for(i in 1:length(rsIDChunks)){
-    currentRSIdChunk <- rsIDChunks[[i]]
-    genotype_data <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,targetRS)
+  #Run chunks in parallel
+  print('Calculating Interactions')
+  allResultsTbl <- pbmclapply(rsIDChunks,function(currentRSIdChunk) {
+    genotype_data <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk)
     
     #Calculate allele dosage based on genotype probability
     alleleProbMatrix <- genotype_data$data
@@ -26,26 +50,22 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,phenotyp
     
     #Construct Sample vs Phenotype Table
     samplePhenoTbl <- dplyr::select(samplesTbl,'samples'='ID_1',phenotype)
-    colnames(dosageMatrix) <- samplePhenoTbl$samples
-    
-    #Function which calculates significance of interaction between two SNPs
-    CalcInteractions <- function(dosageSubMatrix,phenotypes){
-      #Merge into data frame
-      data <- data.frame(SNP1=dosageSubMatrix[1,],SNP2=dosageSubMatrix[2,],Pheno=as.numeric(phenotypes))
-      #Linear model, with GxG interaction plus individual main effect
-      fit <- lm('Pheno~SNP1*SNP2',data = data)
-      #Return significance of interaction term
-      return(summary(fit)$coefficients[4,c(4,1)])
-    }
-    
+    phenotypes<- as.numeric(samplePhenoTbl[,phenotype])
     #save results
     nonTargetSnps <- setdiff(rownames(dosageMatrix),targetRS)
+    dosageMatrix <- dosageMatrix[,!is.nan(phenotypes)]
+    dosageTarget <- dosageTarget[,!is.nan(phenotypes)]
+    phenotypes <- phenotypes[!is.nan(phenotypes)]
+    
+    #Intialize results vector
+    resultsTbl <- data.frame('rsid'=rep('',length(nonTargetSnps)),'p' = rep(NA,length(nonTargetSnps)), 'coeff'=rep(NA,length(nonTargetSnps)),stringsAsFactors = F)
     for(k in 1:length(nonTargetSnps)){
-      resultsTbl[((i-1)*chunkSize+k),1] <- nonTargetSnps[k]
-      resultsTbl[((i-1)*chunkSize+k),c(2,3)] <- CalcInteractions(dosageMatrix[c(nonTargetSnps[k],targetRS),],samplePhenoTbl[,phenotype])
+      resultsTbl[k,1] <- nonTargetSnps[k]
+      resultsTbl[k,c(2,3)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes)
     }
-  }
-  data.table::fwrite(resultsTbl,file = paste0('~/',targetRS,'_',phenotype,'/',bgen_file_prefix,'.interactions.txt'),sep = '\t',row.names = F)
+    return(resultsTbl)
+  },mc.cores = n_cores)
+  data.table::fwrite(do.call(rbind,allResultsTbl),file = paste0(path_out,'/',bgen_file_prefix,'.interactions.txt'),sep = '\t',row.names = F)
 }
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
@@ -55,17 +75,33 @@ args=(commandArgs(TRUE))
 ## Then cycle through each element of the list and evaluate the expressions.
 if(length(args)==0){
   print("No arguments supplied.")
-  ##supply default values
-  path <- '~/blood_pressure_test/'
+  #supply default values
+  path <-  '~/rds/hpc-work/UKB_Data/'
   sample_file_prefix <- 'ukbb_eur_all_sbp'
-  bgen_file_prefix <- 'sbp_chr10'
+  bgen_file_prefix <- paste0('ukb_imp_chr#_HRConly')
+  chr <- '10'
   phenotype = 'sbp'
   targetRS <- 'rs603424'
+  target_chr <- '10'
+  path_out <- paste0(path,targetRS,'_',phenotype)
+  system(paste0('mkdir -p ',path_out))
+  n_cores=2
+  
+  # path <-  '/home/zmx21/blood_pressure_test/'
+  # sample_file_prefix <- 'ukbb_eur_all_sbp'
+  # bgen_file_prefix <- paste0('sbp_chr#')
+  # chr <- '10'
+  # phenotype = 'sbp'
+  # targetRS <- 'rs603424'
+  # target_chr <- '10'
+  # path_out <- paste0(path,targetRS,'_',phenotype)
+  # system(paste0('mkdir -p ',path_out))
+  # n_cores=5
+  
   
 }else{
   for(i in 1:length(args)){
     eval(parse(text=args[[i]]))
   }
 }
-RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS)
-  
+RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores)

@@ -1,10 +1,10 @@
-LoadBgen <- function(path,bgen_file_prefix,rsIDs,targetRS){
+LoadBgen <- function(path,bgen_file_prefix,rsIDs){
   library(rbgen)
   #Load bgen file
   curwd <- getwd()
   setwd(path)
   genotype_data <- rbgen::bgen.load(filename = paste0(bgen_file_prefix,'.bgen'),
-                                    rsids = c(as.character(rsIDs$rsid),targetRS))
+                                    rsids = as.character(rsIDs$rsid))
   setwd(curwd)
   return(genotype_data)
 }
@@ -18,10 +18,15 @@ LoadSamples <- function(path,sample_file_prefix){
 }
 FindAllRSIds <- function(path,bgen_file_prefix){
   library(dplyr)
-  bgenSummary <- system(paste0('bgenix -g ',path,bgen_file_prefix,'.bgen',' -list'),intern = T)
+  curwd <- getwd()
+  setwd(path)
+  
+  bgenSummary <- system(paste0('bgenix -g ',bgen_file_prefix,'.bgen',' -list'),intern = T)
   #Remove comment headers
   bgenSummary <- bgenSummary[-c(1,length(bgenSummary))]
-  bgenSummary <- read.delim(text = bgenSummary,header = T)
+  bgenSummary <- data.table::fread(paste(bgenSummary,collapse = '\n'),sep = '\t',header = T,showProgress = F)
   rsIDs <- dplyr::select(bgenSummary,rsid,chromosome)
+  setwd(curwd)
+  
   return(rsIDs)
 }
