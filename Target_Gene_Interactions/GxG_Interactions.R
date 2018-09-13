@@ -13,7 +13,7 @@ CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes){
 }
 
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores){
-  chunkSize=100
+  chunkSize=200
   
   library(dplyr)
   library(parallel)
@@ -64,44 +64,64 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
       resultsTbl[k,c(2,3)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes)
     }
     return(resultsTbl)
-  },mc.cores = n_cores)
-  data.table::fwrite(do.call(rbind,allResultsTbl),file = paste0(path_out,'/',bgen_file_prefix,'.interactions.txt'),sep = '\t',row.names = F)
+  },mc.cores = as.numeric(n_cores),ignore.interactive = T)
+  data.table::fwrite(do.call(rbind,allResultsTbl),file = paste0(path_out,bgen_file_prefix,'.interactions.txt'),sep = '\t',row.names = F)
 }
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
-
 ##args is now a list of character vectors
 ## First check to see if arguments are passed.
 ## Then cycle through each element of the list and evaluate the expressions.
 if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
-  path <-  '~/rds/hpc-work/UKB_Data/'
-  sample_file_prefix <- 'ukbb_eur_all_sbp'
-  bgen_file_prefix <- paste0('ukb_imp_chr#_HRConly')
-  chr <- '10'
-  phenotype = 'sbp'
-  targetRS <- 'rs603424'
-  target_chr <- '10'
-  path_out <- paste0(path,targetRS,'_',phenotype)
-  system(paste0('mkdir -p ',path_out))
-  n_cores=2
-  
-  # path <-  '/home/zmx21/blood_pressure_test/'
+  # path <-  '~/rds/hpc-work/UKB_Data/'
   # sample_file_prefix <- 'ukbb_eur_all_sbp'
-  # bgen_file_prefix <- paste0('sbp_chr#')
+  # bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   # chr <- '10'
   # phenotype = 'sbp'
   # targetRS <- 'rs603424'
   # target_chr <- '10'
   # path_out <- paste0(path,targetRS,'_',phenotype)
-  # system(paste0('mkdir -p ',path_out))
-  # n_cores=5
-  
+  # n_cores=2
+  path <-  '/home/zmx21/blood_pressure_test/'
+  sample_file_prefix <- 'ukbb_eur_all_sbp'
+  bgen_file_prefix <- 'sbp_chr#'
+  chr <- '10'
+  phenotype = 'sbp'
+  targetRS <- 'rs603424'
+  target_chr <- '10'
+  path_out <- paste0(path,targetRS,'_',phenotype)
+  n_cores=2
+  system(paste0('mkdir -p ',path_out))
+}else if (length(args)!=8){
+  stop("You need to supply:\n",
+       "# 1: Input Path\n",
+       '# 2: Sample File Prefix\n',
+       "# 3: Bgen File Rrefix\n",
+       "# 4: Chromosome to Analyze\n",
+       "# 5: Phenotype Identifier (column name in .sample file) \n",
+       "# 6: rsid of Target SNP\n",
+       "# 7: Chromosome of The Target SNP\n",
+       '# 8: Number of Cores\n',
+       "Exiting...", call.=FALSE)
   
 }else{
+  print('All Arguments Supplied')
+  str <- c("# 1: Input Path:",
+           '# 2: Sample File Prefix:',
+           "# 3: Bgen File Prefix:",
+           "# 4: Chromosome to Analyze:",
+           "# 5: Phenotype Identifier (column name in .sample file):",
+           "# 6: rsid of Target SNP:",
+           "# 7: Chromosome of The Target SNP:",
+           '# 8: Number of Cores:')
+  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','target_chr','n_cores')
   for(i in 1:length(args)){
-    eval(parse(text=args[[i]]))
+    eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
+    print(paste0(str[i],"   ",args[i]))
   }
+  path_out <- paste0(path,targetRS,'_',phenotype,'/')
+  system(paste0('mkdir -p ',path_out))
 }
 RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores)
