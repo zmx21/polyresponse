@@ -13,7 +13,7 @@ CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes){
 }
 
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores){
-  chunkSize=200
+  chunkSize=50
   
   library(dplyr)
   library(parallel)
@@ -23,7 +23,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Genotype info of target gene
   target_file_prefix <- gsub(pattern = '#',replacement = target_chr,x = bgen_file_prefix)
-  dosageTarget <- LoadBgen(path,target_file_prefix,data.frame(rsid=targetRS))
+  dosageTarget <- LoadBgen(path,target_file_prefix,targetRS)
   dosageTarget <- dosageTarget$data
   dosageTarget <- matrix(0,nrow = nrow(dosageTarget),ncol = ncol(dosageTarget)) + dosageTarget[,,'g=1'] + 2*dosageTarget[,,'g=2']
   
@@ -32,14 +32,16 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Find all rsids, and generate chunks to read.
   print('Loading rsID')
-  allRSIds <- FindAllRSIds(path,bgen_file_prefix) %>% dplyr::filter(rsid!=targetRS) %>% dplyr::distinct(rsid)
-  rsIDChunks <- split(allRSIds,seq(nrow(allRSIds)-1)%/%chunkSize)
+  allRSIds <- FindAllRSIds(path,bgen_file_prefix) %>% dplyr::filter(rsid!=targetRS)
+  allRSIds <- unique(allRSIds$rsid)
+  rsIDChunks <- split(allRSIds,seq(length(allRSIds)-1)%/%chunkSize)
   print('Loading Samples')
   samplesTbl <- LoadSamples(path,sample_file_prefix)
   
   #Run chunks in parallel
-  print('Calculating Interactions')
-  allResultsTbl <- pbmclapply(rsIDChunks,function(currentRSIdChunk) {
+  print(paste0('Calculating Interactions: ',length(rsIDChunks),' chunks'))
+  allResultsTbl <- pbmclapply(1:length(rsIDChunks),function(i) {
+    currentRSIdChunk <- rsIDChunks[[i]]
     genotype_data <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk)
     
     #Calculate allele dosage based on genotype probability
@@ -63,9 +65,8 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
       resultsTbl[k,1] <- nonTargetSnps[k]
       resultsTbl[k,c(2,3)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes)
     }
-    return(resultsTbl)
+    data.table::fwrite(resultsTbl,file = paste0(path_out,'chunk',i,'.txt'),sep = '\t',col.names = F,row.names = F)
   },mc.cores = as.numeric(n_cores),ignore.interactive = T)
-  data.table::fwrite(do.call(rbind,allResultsTbl),file = paste0(path_out,bgen_file_prefix,'.interactions.txt'),sep = '\t',row.names = F)
 }
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
@@ -75,7 +76,22 @@ args=(commandArgs(TRUE))
 if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
-  # path <-  '~/rds/hpc-work/UKB_Data/'
+  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/blood_pressure_test/'
+  sample_file_prefix <- 'ukbb_eur_all_sbp'
+  bgen_file_prefix <- 'sbp_chr10'
+  chr <- '10'
+  phenotype = 'sbp'
+  targetRS <- 'rs603424'
+  target_chr <- '10'
+  n_cores=5
+  path_out <- paste0(path,targetRS,'_',phenotype,'/')
+  path_out_chr <- paste0(path,targetRS,'_',phenotype,'/chr',chr,'/')
+  system(paste0('mkdir -p ',path_out))
+  system(paste0('chmod a+rwx ',path_out))
+  system(paste0('mkdir -p ',path_out_chr))
+  system(paste0('chmod a+rwx ',path_out_chr))
+  
+  # path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
   # sample_file_prefix <- 'ukbb_eur_all_sbp'
   # bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   # chr <- '10'
@@ -84,16 +100,9 @@ if(length(args)==0){
   # target_chr <- '10'
   # path_out <- paste0(path,targetRS,'_',phenotype)
   # n_cores=2
-  path <-  '/home/zmx21/blood_pressure_test/'
-  sample_file_prefix <- 'ukbb_eur_all_sbp'
-  bgen_file_prefix <- 'sbp_chr#'
-  chr <- '10'
-  phenotype = 'sbp'
-  targetRS <- 'rs603424'
-  target_chr <- '10'
-  path_out <- paste0(path,targetRS,'_',phenotype)
-  n_cores=2
-  system(paste0('mkdir -p ',path_out))
+  # system(paste0('mkdir -p ',path_out))
+  # system(paste0('chmod a+rwx ',path_out))
+  
 }else if (length(args)!=8){
   stop("You need to supply:\n",
        "# 1: Input Path\n",
@@ -122,6 +131,10 @@ if(length(args)==0){
     print(paste0(str[i],"   ",args[i]))
   }
   path_out <- paste0(path,targetRS,'_',phenotype,'/')
+  path_out_chr <- paste0(path,targetRS,'_',phenotype,'/chr',chr,'/')
   system(paste0('mkdir -p ',path_out))
+  system(paste0('chmod a+rwx ',path_out))
+  system(paste0('mkdir -p ',path_out_chr))
+  system(paste0('chmod a+rwx ',path_out_chr))
 }
-RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out,n_cores)
+RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,target_chr,path_out_chr,n_cores)

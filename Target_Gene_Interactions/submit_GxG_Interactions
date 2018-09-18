@@ -19,7 +19,7 @@
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each.
 #SBATCH --ntasks=16
 #! How much wallclock time will be required?
-#SBATCH --time=5-00:00:00
+#SBATCH --time=10-00:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -126,4 +126,9 @@ echo -e "\nExecuting command:\n==================\n$CMD\n"
 
 #eval $CMD
 chr=$1 
-Rscript ./GxG_Interactions.R "/mrc-bsu/scratch/zmx21/UKB_Data/" "ukbb_eur_all_sbp" "ukb_imp_chr#_HRConly" $chr "sbp" "rs603424" "10" "16"
+if [ $1 -eq 0]
+then 
+	RScript ./GxG_Interactions.R
+else
+	Rscript ./GxG_Interactions.R "/mrc-bsu/scratch/zmx21/UKB_Data/" "ukbb_eur_all_sbp" "ukb_imp_chr#_HRConly" $chr "sbp" "rs603424" "10" "16"
+fi
