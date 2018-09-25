@@ -12,22 +12,22 @@
 #! Name of the job:
 
 #! Which project should be charged:
-#SBATCH -A MRC-BSU-SL2-CPU
+#SBATCH -A MRC-BSU-SL2-GPU
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
-#SBATCH --ntasks=16
+#SBATCH --ntasks=12
 #! How much wallclock time will be required?
-#SBATCH --time=10-00:00:00
+#SBATCH --time=12:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
-#SBATCH -p bsu-cpu
+#! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU
+#SBATCH -p bsu-gpu
 
 #! sbatch directives end here (put any additional directives above this line)
 
@@ -127,7 +127,7 @@ echo -e "\nExecuting command:\n==================\n$CMD\n"
 #eval $CMD
 chr=$1 
 if [ $chr -eq 0 ]
-then 
+then
 	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
 else
 	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' "/mrc-bsu/scratch/zmx21/UKB_Data/" "ukbb_eur_all_sbp" "ukb_imp_chr#_HRConly" $chr "sbp" "rs603424" "10" "16"

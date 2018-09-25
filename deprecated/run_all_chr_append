@@ -2,5 +2,5 @@ chr_start=11
 chr_end=22
 for i in $(seq $chr_start 1 $chr_end)
 do
-	sbatch -J "chr"$i ./submit_GxG_Interactions $i
+	sbatch -J "chr"$i ./submit_append_pos_info $i
 done
