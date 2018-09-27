@@ -8,8 +8,10 @@ LoadSNPAnnotations <- function(sql_path,sql_db_name,rsid){
   con <- RSQLite::dbConnect(SQLite(), dbname = sql_db_name)
   #Get annotation info of rsid
   annotation <- do.call(rbind,lapply(rsid,function(x) RSQLite::dbGetQuery(con,paste0('SELECT * FROM all_rsid WHERE rsid=','"',x,'"'))))
+  RSQLite::dbDisconnect(con)
   #Remove duplicated rsid (different mutation at same pos)
   annotation <- dplyr::distinct(annotation,position,chromosome,.keep_all=T)
+  
   setwd(curwd)
   return(annotation)
 }
@@ -32,12 +34,13 @@ LoadBgen <- function(path,bgen_file_prefix,rsIDs,chr=NULL){
   for(i in 1:length(uniqueFiles)){
     currentFile <- uniqueFiles[i]
     currentrsIDs <- rsIDs[which(bgen_file_prefix == currentFile)]
-    resultList[[i]] <- rbgen::bgen.load(filename = paste0(currentFile,'.bgen'),
+    currentAlleleProbMatrix <- rbgen::bgen.load(filename = paste0(currentFile,'.bgen'),
                                       rsids = currentrsIDs)$data
+    resultList[[i]] <- currentAlleleProbMatrix[,,'g=1'] + 2*currentAlleleProbMatrix[,,'g=2']
   }
   setwd(curwd)
-  alleleProbMatrix <- abind(resultList,along = 1)
-  return(alleleProbMatrix)
+  dosageMatrix <- do.call(rbind,resultList)
+  return(dosageMatrix)
 }
 LoadSamples <- function(path,sample_file_prefix){
   #Load sample file

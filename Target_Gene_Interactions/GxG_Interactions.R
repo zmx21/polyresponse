@@ -19,8 +19,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Genotype info of target gene
   dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS,target_chr)
-  dosageTarget <- matrix(0,nrow = nrow(dosageTarget),ncol = ncol(dosageTarget)) + dosageTarget[,,'g=1'] + 2*dosageTarget[,,'g=2']
-  
+
   #Find all rsids, and generate chunks to read.
   print('Loading rsID')
   allRSIds <- FindAllRSIds(path,gsub(pattern = '#',replacement = chr,x = bgen_file_prefix)) %>% dplyr::filter(rsid!=targetRS)
@@ -33,11 +32,8 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   print(paste0('Calculating Interactions: ',length(rsIDChunks),' chunks'))
   allResultsTbl <- pbmclapply(1:length(rsIDChunks),function(i) {
     currentRSIdChunk <- rsIDChunks[[i]]
-    alleleProbMatrix <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,rep(chr,length(currentRSIdChunk)))
+    dosageMatrix <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,rep(chr,length(currentRSIdChunk)))
     
-    #Calculate allele dosage based on genotype probability
-    dosageMatrix <- alleleProbMatrix[,,'g=1'] + 2*alleleProbMatrix[,,'g=2']
-
     #Construct Sample vs Phenotype Table
     samplePhenoTbl <- dplyr::select(samplesTbl,'samples'='ID_1',phenotype)
     phenotypes<- as.numeric(samplePhenoTbl[,phenotype])
@@ -64,9 +60,9 @@ args=(commandArgs(TRUE))
 if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/chr10_random_norm/'
-  sample_file_prefix <- 'ukbb_eur_all_sbp_norm'
-  bgen_file_prefix <- 'chr10_random'
+  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/blood_pressure_test/'
+  sample_file_prefix <- 'ukbb_eur_all_sbp'
+  bgen_file_prefix <- 'sbp_chr10'
   chr <- '10'
   phenotype = 'sbp'
   targetRS <- 'rs603424'
