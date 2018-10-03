@@ -1,0 +1,16 @@
+chr=$1
+if [ $chr -eq 0 ]
+then 
+	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
+else
+	path="/mrc-bsu/scratch/zmx21/UKB_Data/"
+	sample_file_prefix="ukbb_metadata"
+	bgen_file_prefix="ukb_imp_chr#_HRConly"
+	chr=$1
+	phenotype="sbp"
+	targetRS=$2
+	out_suffix="eur_only"
+	eur_only=1
+	n_cores=1
+	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $n_cores
+fi
