@@ -1,7 +1,9 @@
+.libPaths(c("/home/zmx21/R/x86_64-redhat-linux-gnu-library/3.3"))
 library(sqldf)
 library(dplyr)
 library(rbgen)
 library(abind)
+library(DBI)
 library(RSQLite)
 LoadSNPAnnotations <- function(sql_path,sql_db_name,rsid){
   curwd <- getwd()
@@ -78,7 +80,7 @@ FindAllRSIds <- function(chr,MAF=-Inf,Info=-Inf){
   curwd <- getwd()
   setwd(path)
   anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
-  anno_db <- tbl(anno_con,'all_snp_stats')
+  anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
   
   if(as.numeric(chr) < 10){
     chr <- paste0('0',chr)

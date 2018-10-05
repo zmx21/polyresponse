@@ -6,7 +6,7 @@ GetPairwiseLD <- function(SNP1,SNP2){
   #Use GRCh37 reference genome
   server <- "http://grch37.rest.ensembl.org/"
   #Generate query
-  ext <- paste0("/ld/human/pairwise/",SNP1,"/",SNP2,"?population_name=1000GENOMES:phase_3:EUR")
+  ext <- paste0("/ld/human/pairwise/",SNP1,"/",SNP2,"?population_name=1000GENOMES:phase_3:ALL")
   #Sent query as GET request
   r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
   stop_for_status(r)

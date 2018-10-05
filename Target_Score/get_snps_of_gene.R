@@ -5,17 +5,19 @@ library(biomaRt)
 
 GetFlankingSNPs <- function(chr,gene_position_start,gene_position_end,upstream_dist,downstream_dist){
   #Connect to annotation database
-  anno_sql_name<- "all_rsid.sqlite"
+  anno_sql_name<- "all_snp_stats.sqlite"
   path <- '~/bsu_scratch/SQL/'
   setwd(path)
   anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
-  anno_db <- tbl(anno_con,'all_rsid')
+  anno_db <- tbl(anno_con,'all_snp_stats')
   
   #Start of flanking region
   start_of_region <- gene_position_start - upstream_dist
   #End of flanking region
   end_of_region <- gene_position_end + downstream_dist
-  snps_within_region <- dplyr::filter(anno_db,as.numeric(chromosome)==chr & as.numeric(position) >= start_of_region & as.numeric(position) <= end_of_region) %>% collect()
+  
+  snps_within_region <- dplyr::filter(anno_db,as.numeric(chromosome)==chr & as.numeric(position) >= start_of_region & as.numeric(position) <= end_of_region) %>% dplyr::select(rsid,minor_allele_frequency,info) %>% collect()
+  RSQLite::dbDisconnect(anno_con)
   return(snps_within_region)   
 }
 GetGenePosition <- function(gene_name){

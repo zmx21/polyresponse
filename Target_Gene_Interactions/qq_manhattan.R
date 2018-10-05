@@ -11,9 +11,9 @@ anno_db <- tbl(anno_con,'all_snp_stats')
 
 
 #Read in results
-results_tbl <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/rs1262894_sbp_eur_only/chr10.txt'))
+results_tbl <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/rs1262894_sbp_eur_only/chr10.txt'),header = F)
 colnames(results_tbl) <- c('rsid','p','coeff','rsq')
-results_tbl$p_bonf <- p.adjust(results_tbl$p,method = 'bonferroni')
+results_tbl$p_bonf <- p.adjust(results_tbl$p_int,method = 'bonferroni')
 
 sig_results <- results_tbl %>% dplyr::filter(p_bonf<0.2)
 #Join with annotation information
@@ -32,18 +32,9 @@ PToChiSq <- function(p,df){
 # results_tbl_anno <- anno_db %>% dplyr::select(rsid,chromosome) %>% dplyr::filter(rsid %in% results_tbl$rsid) %>% collect()
 
 library(snpStats)
-results_sample <- results_tbl #results_tbl[sample(1:nrow(results_tbl),1000000,replace=F),]
-results_sample$chi_sq <- unlist(pbmclapply(results_sample$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
-qq.chisq(results_sample$chi_sq,main = 'rs1262894 chr10 EUR only')
+results_tbl$chi_sq <- unlist(pbmclapply(results_tbl$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
+qq.chisq(results_tbl$chi_sq,main = 'rs1262894 chr10 EUR (Age,Sex,BMI)')
 
-# results_chr10 <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/',target,'_',phenotype,'/chr10.txt'))
-# colnames(results_chr10) <- c('rsid','p','coeff')
-# results_chr10$chi_sq <- unlist(pbmclapply(results_chr10$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
-# 
-# qq.chisq(results_chr10$chi_sq)
-# 
-# results_no_chr10 <- dplyr::filter(results_tbl,!rsid%in%results_chr10$rsid)
-# results_no_chr10_sample <- results_no_chr10[sample(1:nrow(results_no_chr10),1000000,replace=F),]
-# results_no_chr10_sample$chi_sq <- unlist(pbmclapply(results_no_chr10_sample$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
-# 
-# qq.chisq(results_no_chr10_sample$chi_sq)
+maf_info_filtered <-dplyr::filter(anno_db,rsid %in% results_tbl$rsid & minor_allele_frequency > 0.05 & info > 0.5) %>% dplyr::select(rsid) %>% collect() %>% dplyr::left_join(results_tbl,by=c('rsid'='rsid'))
+qq.chisq(maf_info_filtered$chi_sq,main = 'rs1262894 chr10 EUR MAF and Info Filtered')
+
