@@ -1,4 +1,6 @@
 source('/home/zmx21/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
+
 library(RcppEigen)
 library(pbmcapply)
 library(dplyr)
@@ -20,56 +22,23 @@ LinearFit <- function(dosageSubMatrix,phenotypes,covariates,verbose=T){
   return(results)
 }
 
-CalcMarginalEffect <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,n_cores,verbose){
-  #Load phenotype information of samples
-  print('Loading Phenotypes')
+CalcMarginalEffect <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,PC,med,n_cores,verbose){
   #Decide what columns to load based on what covariates were specificed
   if(cov!=''){
     cov_names <- unlist(strsplit(x=cov,split = ','))
   }else{
     cov_names <- c()
   }
-  #Load phenotype table
-  samplePhenoTbl <- data.table::fread(paste0(path,sample_file_prefix,'.csv'),select = c('UKB_genetic_ID','euro',phenotype,cov_names))
-  
-  #Construct Sample vs Phenotype Table
-  phenotypes<- dplyr::select(samplePhenoTbl,phenotype) %>% t() %>% as.vector() 
-  if(length(cov_names)>0){
-    covariates <- dplyr::select(samplePhenoTbl,cov_names)
-    #Remove samples with no phenotype or cov measure.
-    samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype,cov_names)),1,function(x) any(is.na(x)))
-    
-  }else{
-    covariates <- data.frame()
-    #Remove samples with no phenotype.
-    samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype)),1,function(x) any(is.na(x)))
-    
+  #Add PC to covariates, if specified
+  if(PC > 0){
+    cov_names <- c(cov_names,sapply(1:PC,function(x) paste0('PC',x)))
   }
-  #Remove samples with non-european ancestry if specified in argument.
-  if(eur_only != 1 & eur_only != 0){
-    stop('Please specify eur only')
-  }else if(eur_only == 1){
-    samplesToKeep <- samplesToKeep & (samplePhenoTbl$euro == 1)
-  }
-  
-  #Remove samples with no phenotyes
-  phenotypes <- phenotypes[samplesToKeep]
-  if(ncol(covariates) > 0){
-    covariates <- as.data.frame(covariates[samplesToKeep,])
-  }
-
-  #Convert to numeric for non-numeric phenotypes/covariates
-  if(!is.numeric(phenotypes)){
-    phenotypes <- as.numeric(as.factor(phenotypes))
-  }
-  if(ncol(covariates) > 0){
-    for(cov_name in cov_names){
-      curVect <- covariates[,cov_name]
-      if(!is.numeric(curVect)){
-        covariates[,cov_name] <- as.numeric(as.factor(as.vector(t(curVect))))
-      }
-    }
-  }
+  #Load Phenotype and Covariates
+  print('Loading Phenotypes')
+  phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only,med)
+  phenotypes <- phenotypesAndCov$phenotypes
+  covariates <- phenotypesAndCov$covariates
+  samplesToKeep <- phenotypesAndCov$samplesToKeep
   
   #Calc marginal effects
   results <- pbmclapply(1:length(rsid),function(i) {

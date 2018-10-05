@@ -8,7 +8,7 @@ CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes,covariates)
   return(c(as.vector(t(summary(fit)$coefficients[-1,])),summary(fit)$r.squared))
 }
 
-RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,MAF,Info,n_cores){
+RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores){
   chunkSize=50
   
   library(dplyr)
@@ -16,7 +16,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   library(data.table)
   library(pbmcapply)
   source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-  
+  source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
   #Genotype info of target gene
   dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
 
@@ -28,34 +28,23 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   #Load phenotype information of samples
   print('Loading Phenotypes')
   #Decide what columns to load based on what covariates were specificed
-  cov_names <- unlist(strsplit(x=cov,split = ','))
-  #Load phenotype table
-  samplePhenoTbl <- data.table::fread(paste0(path,sample_file_prefix,'.csv'),select = c('UKB_genetic_ID','euro',phenotype,cov_names))
-  
-  #Construct Sample vs Phenotype Table
-  phenotypes<- dplyr::select(samplePhenoTbl,phenotype) %>% t() %>% as.vector() 
-  covariates <- dplyr::select(samplePhenoTbl,cov_names)
-  #Remove samples with no phenotype or cov measure, and non-european ancestry if specified in argument.
-  samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype,cov_names)),1,function(x) any(is.na(x)))
-  if(eur_only != 1 & eur_only != 0){
-    stop('Please specify eur only')
-  }else if(eur_only == 1){
-    samplesToKeep <- samplesToKeep & (samplePhenoTbl$euro == 1)
+  if(cov!=''){
+    cov_names <- unlist(strsplit(x=cov,split = ','))
+  }else{
+    cov_names <- c()
   }
+  #Add PC to covariates, if specified
+  if(PC > 0){
+    cov_names <- c(cov_names,sapply(1:PC,function(x) paste0('PC',x)))
+  }
+  
+  #Load Phenotype and Covariates
+  phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only,med)
+  phenotypes <- phenotypesAndCov$phenotypes
+  covariates <- phenotypesAndCov$covariates
+  samplesToKeep <- phenotypesAndCov$samplesToKeep
+  
   dosageTarget <- dosageTarget[,samplesToKeep]
-  phenotypes <- phenotypes[samplesToKeep]
-  covariates <- as.data.frame(covariates[samplesToKeep,])
-  
-  #Convert to numeric for non-numeric phenotypes/covariates
-  if(!is.numeric(phenotypes)){
-    phenotypes <- as.numeric(as.factor(phenotypes))
-  }
-  for(cov_name in cov_names){
-    curVect <- covariates[,cov_name]
-    if(!is.numeric(curVect)){
-      covariates[,cov_name] <- as.numeric(as.factor(as.vector(t(curVect))))
-    }
-  }
   #Run chunks in parallel
   print(paste0('Calculating Interactions: ',length(rsIDChunks),' chunks'))
   allResultsTbl <- pbmclapply(1:length(rsIDChunks),function(i) {
@@ -88,16 +77,20 @@ if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
   path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-  sample_file_prefix <- 'ukbb_metadata'
+  sample_file_prefix <- 'ukbb_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  chr <- '2'
+  chr <- '10'
   phenotype = 'sbp'
-  targetRS <- 'rs6602047'
+  targetRS <- 'rs1262894'
   target_chr <- '10'
-  n_cores=1
-  eur_only=1
+  n_cores <- 1
+  eur_only <- 1
   out_suffix <- 'eur_only'
-  cov='sex,ages,bmi'
+  cov <- 'sex,ages,bmi'
+  PC <-  5
+  MAF <- 0.05
+  info <- 0.5
+  med=1
   if(out_suffix == ''){
     path_out <- paste0(path,targetRS,'_',phenotype,'/')
     path_out_chr <- paste0(path,targetRS,'_',phenotype,'/chr',chr,'/')
@@ -110,7 +103,7 @@ if(length(args)==0){
   system(paste0('mkdir -p ',path_out_chr))
   system(paste0('chmod a+rwx ',path_out_chr))
 
-}else if (length(args)!=12){
+}else if (length(args)!= 14){
   stop("You need to supply:\n",
        "# 1: Input Path\n",
        '# 2: Sample File Prefix\n',
@@ -121,9 +114,11 @@ if(length(args)==0){
        "# 7: Suffix of output directory\n",
        "# 8: EUR only\n",
        "# 9: Covariates (seperated by comma)\n",
-       "# 10: MAF filter\n",
-       "# 11: Info filter\n",
-       '# 12: Number of Cores\n',
+       "# 10: Number of PC to include\n",
+       '# 11: Medication: (add 10 to bp for those taking med)',
+       "# 12: MAF filter\n",
+       "# 13: Info filter\n",
+       '# 14: Number of Cores\n',
        "Exiting...", call.=FALSE)
   
 }else{
@@ -137,10 +132,12 @@ if(length(args)==0){
            "# 7: Suffix of output directory:",
            "# 8: EUR only:",
            "# 9: Covariates (seperated by comma):",
-           "# 10: MAF cutoff",
-           "# 11: Info cutoff",
-           '# 12: Number of Cores:')
-  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','MAF','info','n_cores')
+           "# 10: Number of PC to include",
+           '# 11: Medication: (add 10 to bp for those taking med)',
+           "# 12: MAF cutoff",
+           "# 13: Info cutoff",
+           '# 14: Number of Cores:')
+  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
@@ -157,4 +154,5 @@ if(length(args)==0){
   system(paste0('mkdir -p ',path_out_chr))
   system(paste0('chmod a+rwx ',path_out_chr))
 }
-RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out_chr,eur_only,cov,MAF,info,n_cores)
+RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out_chr,eur_only,
+                   cov,PC,med,MAF,info,n_cores)
