@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --ntasks=1
+#SBATCH --time=1440 #or –t, max wall time, in min
+#SBATCH --cpus-per-task=19 #or –c, max CPUs for the job
+#SBATCH --partition=medium #or –p, partition to run job on
+module load R
+module load bgenix
+chr=$1
+if [ $chr -eq 0 ]
+then 
+	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
+else
+	path="~/bsu_scratch/"
+        sample_file_prefix="ukbb_metadata"
+        bgen_file_prefix="ukb_imp_chr#_HRConly"
+        chr=$1
+        phenotype="sbp"
+        targetRS=$2
+        out_suffix=$3
+	cov=$4
+        eur_only=1
+	MAF='0.05'
+        info='0.5'
+        n_cores=19
+        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $MAF $info $n_cores
+fi

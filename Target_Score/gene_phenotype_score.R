@@ -10,7 +10,7 @@ CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,MAF,info,n_
   all_snps <- all_snps %>% dplyr::filter(minor_allele_frequency > !!MAF & info > !!info)
   
   #Calculate marginal effect of all snps using the UKBB data
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
+  path <-  '~/bsu_scratch/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   phenotype <- 'sbp'

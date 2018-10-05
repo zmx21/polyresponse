@@ -1,0 +1,85 @@
+/var/spool/slurm/slurmd/job1290390/slurm_script: line 6: module: command not found
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: methods
+Loading required package: parallel
+Loading required package: future
+
+Attaching package: ‘dbplyr’
+
+The following objects are masked from ‘package:dplyr’:
+
+    ident, sql
+
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"
+[1] "Finding SNPs"
+[1] "Loading Phenotypes"
+[1] "Loading Phenotypes"

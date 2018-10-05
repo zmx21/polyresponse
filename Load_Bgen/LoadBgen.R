@@ -1,5 +1,3 @@
-.libPaths(c("/home/zmx21/R/x86_64-redhat-linux-gnu-library/3.3"))
-library(sqldf)
 library(dplyr)
 library(rbgen)
 library(abind)

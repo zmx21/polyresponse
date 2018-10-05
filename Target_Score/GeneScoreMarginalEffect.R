@@ -76,17 +76,17 @@ CalcMarginalEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix
   fit <- LinearFitGeneScore(as.vector(dosageVector),phenotypes,covariates)
   return(fit)
 }
-path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
+path <-  '~/bsu_scratch/UKB_Data/'
 sample_file_prefix <- 'ukbb_metadata'
 bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
 phenotype <- 'sbp'
 
-distances <- c(5000,seq(10000,100000,10000))
-distances <- 10000
+distances <- c(5000,seq(10000,200000,10000))
 fits <- vector(mode = 'list',length = length(distances))
 
 for(i in 1:length(distances)){
   pruningResult <- IterativePruning('SCNN1D',distances[i],distances[i],5e-6,0.2,20)
   fits[[i]] <- CalcMarginalEffectGeneScore(path,sample_file_prefix,bgen_file_prefix,phenotype,pruningResult$rsid,1,'sex,ages,bmi',pruningResult$coeff)
-  
+  write(fits[[i]],ncol=3,file='~/pruning_fits.txt',append=T)
+  write(pruningResult$rsid,ncol=length(pruningResult$rsid),file='~/pruning_rsid.txt',append=T)
 }

@@ -1,0 +1,7 @@
+#!/bin/bash
+#SBATCH --ntasks=1
+#SBATCH --time=1440 #or –t, max wall time, in min
+#SBATCH --cpus-per-task=20 #or –c, max CPUs for the job
+#SBATCH --partition=medium #or –p, partition to run job on
+module load R
+Rscript ./GeneScoreMarginalEffect.R
