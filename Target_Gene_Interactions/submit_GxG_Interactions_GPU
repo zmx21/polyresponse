@@ -19,7 +19,7 @@
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
 #SBATCH --ntasks=12
 #! How much wallclock time will be required?
-#SBATCH --time=2-00:00:00
+#SBATCH --time=10-00:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -130,17 +130,19 @@ if [ $chr -eq 0 ]
 then 
 	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
 else
-	path="/mrc-bsu/scratch/zmx21/UKB_Data/"
-        sample_file_prefix="ukbb_metadata"
+	path="~/bsu_scratch/UKB_Data/"
+        sample_file_prefix="ukbb_metadata_with_PC"
         bgen_file_prefix="ukb_imp_chr#_HRConly"
         chr=$1
         phenotype="sbp"
         targetRS=$2
         out_suffix=$3
-	cov=$4
         eur_only=1
-	MAF='0.01'
-	info='0.5'
-        n_cores=1
-        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $MAF $info $n_cores
+        cov=$4
+        PC=$5
+        med=1
+        MAF='0.05'
+        info='0.5'
+        n_cores=12
+        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $PC $med $MAF $info $n_cores
 fi

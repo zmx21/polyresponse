@@ -1,5 +1,5 @@
 library(pbmcapply)
-CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,MAF,info,n_cores){
+CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,phenotype,MAF,info,n_cores){
   source('~/MRC_BSU_Internship/Target_Score/get_snps_of_gene.R')
   source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
   #Obtain all SNPs which map to the gene
@@ -11,11 +11,10 @@ CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,MAF,info,n_
   
   #Calculate marginal effect of all snps using the UKBB data
   path <-  '~/bsu_scratch/UKB_Data/'
-  sample_file_prefix <- 'ukbb_metadata'
+  sample_file_prefix <- 'ukbb_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  phenotype <- 'sbp'
 
-  UKBB_marginal_effect <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,all_snps$rsid,1,'sex,ages,bmi',n_cores,F)
+  UKBB_marginal_effect <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,all_snps$rsid,1,cov='sex,ages,bmi',PC=5,med=1,n_cores,F)
   
   return(UKBB_marginal_effect)
 }

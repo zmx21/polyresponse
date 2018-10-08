@@ -46,17 +46,39 @@ CalcMarginalEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix
   fit <- LinearFitGeneScore(as.vector(dosageVector),phenotypes,covariates)
   return(fit)
 }
-path <-  '~/bsu_scratch/UKB_Data/'
-sample_file_prefix <- 'ukbb_metadata'
-bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-phenotype <- 'sbp'
+# path <-  '~/bsu_scratch/UKB_Data/'
+# sample_file_prefix <- 'ukbb_metadata'
+# bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+# phenotype <- 'sbp'
 
-distances <- c(5000,seq(10000,200000,10000))
-fits <- vector(mode = 'list',length = length(distances))
+target_names <- c('SCNN1A','SCNN1B','SCNN1G','SCNN1D','ACE','CACNA1D','CACNA12D1','CACNA12D2','AGTR1','MME','ADRA2B','GPAT2','PDE5A')
+target_sbp <- lapply(target_names,function(x) IterativePruning(x,'sbp',10000,10000,5e-6,0.3,1))
+target_dbp <- lapply(target_names,function(x) IterativePruning(x,'dbp',10000,10000,5e-6,0.3,1))
+saveRDS(target_names,target_sbp,target_dbp,'~/bsu_scratch/target_snps.rds')
 
-for(i in 1:length(distances)){
-  pruningResult <- IterativePruning('SCNN1D',distances[i],distances[i],5e-6,0.2,20)
-  fits[[i]] <- CalcMarginalEffectGeneScore(path,sample_file_prefix,bgen_file_prefix,phenotype,pruningResult$rsid,1,'sex,ages,bmi',pruningResult$coeff)
-  write(fits[[i]],ncol=3,file='~/pruning_fits.txt',append=T)
-  write(pruningResult$rsid,ncol=length(pruningResult$rsid),file='~/pruning_rsid.txt',append=T)
-}
+
+# SCNN1D_sbp <- IterativePruning('SCNN1D','sbp',10000,10000,5e-6,0.3,20)
+# ACE_sbp <- IterativePruning('ACE','sbp',10000,10000,5e-6,0.3,20)
+# CACNA2D2_sbp<- IterativePruning('CACNA2D2','sbp',10000,10000,5e-6,0.3,20)
+# MME_sbp <- IterativePruning('MME','sbp',10000,10000,5e-6,0.3,20)
+# ADRA2B_sbp <- IterativePruning('ADRA2B','sbp',10000,10000,5e-6,0.3,20)
+# GPAT2_sbp <- IterativePruning('GPAT2','sbp',10000,10000,5e-6,0.3,20)
+# PDE5A_sbp <- IterativePruning('PDE5A','sbp',10000,10000,5e-6,0.3,20)
+# 
+# SCNN1D_dbp <- IterativePruning('SCNN1D','dbp',10000,10000,5e-6,0.3,20)
+# ACE_dbp <- IterativePruning('ACE','dbp',10000,10000,5e-6,0.3,20)
+# CACNA2D2_dbp<- IterativePruning('CACNA2D2','dbp',10000,10000,5e-6,0.3,20)
+# MME_dbp <- IterativePruning('MME','dbp',10000,10000,5e-6,0.3,20)
+# ADRA2B_dbp <- IterativePruning('ADRA2B','dbp',10000,10000,5e-6,0.3,20)
+# GPAT2_dbp <- IterativePruning('GPAT2','dbp',10000,10000,5e-6,0.3,20)
+# PDE5A_dbp <- IterativePruning('PDE5A','dbp',10000,10000,5e-6,0.3,20)
+
+# distances <- c(5000,seq(10000,200000,10000))
+# fits <- vector(mode = 'list',length = length(distances))
+# 
+# for(i in 1:length(distances)){
+#   pruningResult <- IterativePruning('SCNN1D',distances[i],distances[i],5e-6,0.2,20)
+#   fits[[i]] <- CalcMarginalEffectGeneScore(path,sample_file_prefix,bgen_file_prefix,phenotype,pruningResult$rsid,1,'sex,ages,bmi',pruningResult$coeff)
+#   write(fits[[i]],ncol=3,file='~/pruning_fits.txt',append=T)
+#   write(pruningResult$rsid,ncol=length(pruningResult$rsid),file='~/pruning_rsid.txt',append=T)
+# }

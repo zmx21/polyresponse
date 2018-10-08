@@ -6,9 +6,12 @@ LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,m
   #Add 10 to blood pressure of medicine takers.
   if(eur_only != 1 & eur_only != 0){
     stop('Please specify med')
-  }else if(med == 1){
+  }else if(med == 1 & phenotype == 'sbp'){
     medicineTakers <- samplePhenoTbl$hypdbin == 'Current'
     samplePhenoTbl$sbp[medicineTakers] <- samplePhenoTbl$sbp[medicineTakers] + 10
+  }else if(med == 1 & phenotype == 'dbp'){
+    medicineTakers <- samplePhenoTbl$hypdbin == 'Current'
+    samplePhenoTbl$dbp[medicineTakers] <- samplePhenoTbl$dbp[medicineTakers] + 10
   }
   
   #Construct Sample vs Phenotype Table
