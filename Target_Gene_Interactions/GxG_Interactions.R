@@ -3,9 +3,16 @@ library(RcppEigen)
 CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes,covariates){
   #Create model matrix, with main and interaction effects of two SNPs. 
   mdlMat <- cbind('Intercept' = rep(1,length(dosageSubMatrix)),'snp' = dosageSubMatrix,'target' = dosageTarget,'int' = dosageSubMatrix * dosageTarget,covariates)
-  fit <- RcppEigen::fastLm(y = phenotypes,X = mdlMat)
+  #Fit linear model and calculate stats
+  fit <- RcppEigen::fastLmPure(y = phenotypes,X = mdlMat)
+  coeff <- fit$coefficients
+  se <- fit$se
+  t <- coeff/se
+  p <- sapply(t,function(x) 2*pt(abs(x),df=fit$df.residual,lower.tail = F))
+  #Form matrix, rows are type of coeff, columns are type of variable.
+  fit_result <- rbind(coeff,se,t,p)
   #Return coefficient and significance of interaction term
-  return(c(as.vector(t(summary(fit)$coefficients[-1,])),summary(fit)$r.squared))
+  return(c(as.vector(fit_result[,-1]),fit$s))
 }
 
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores){
@@ -17,12 +24,10 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   library(pbmcapply)
   source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
   source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
-  #Genotype info of target gene
-  dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
-
+  source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
   #Find all rsids, and generate chunks to read.
   print('Loading rsID')
-  allRSIds <- FindAllRSIds(chr,as.numeric(MAF),as.numeric(Info)) %>% dplyr::filter(rsid!=targetRS)
+  allRSIds <- FindAllRSIds(chr,as.numeric(MAF),as.numeric(Info)) %>% dplyr::filter(!rsid%in%targetRS)
   allRSIds <- unique(allRSIds$rsid)
   rsIDChunks <- split(allRSIds,seq(length(allRSIds)-1)%/%chunkSize)
   #Load phenotype information of samples
@@ -41,10 +46,32 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   #Load Phenotype and Covariates
   phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only,med)
   phenotypes <- phenotypesAndCov$phenotypes
-  covariates <- phenotypesAndCov$covariates
+  covariates <- as.matrix(phenotypesAndCov$covariates)
   samplesToKeep <- phenotypesAndCov$samplesToKeep
   
-  dosageTarget <- dosageTarget[,samplesToKeep]
+  
+  #Split rsid based on comma
+  targetRS <- unlist(strsplit(targetRS,split = ','))
+  
+  #Genotype info of target gene
+  if(length(targetRS) < 2){
+    dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
+    dosageTarget <- dosageTarget[,samplesToKeep]
+  }else{
+    #Get marginal effects of rsid
+    dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
+    dosageVector <- dosageVector[,samplesToKeep]
+    
+    beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,1,cov='sex,ages,bmi',PC=5,med=1,n_cores,F)$coeff
+    #Flip alleles such that all are bp lowering
+    dosageVectorTemp <- dosageVector
+    for(i in 1:nrow(dosageVectorTemp)){
+      if(beta_coeff[i] > 0){
+        dosageVectorTemp[i,] <- 2-dosageVector[i,]
+      }
+    }
+    dosageVector <- as.vector(abs(beta_coeff) %*% dosageVectorTemp)
+  }
   #Run chunks in parallel
   print(paste0('Calculating Interactions: ',length(rsIDChunks),' chunks'))
   allResultsTbl <- pbmclapply(1:length(rsIDChunks),function(i) {
@@ -56,11 +83,11 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     dosageMatrix <- dosageMatrix[,samplesToKeep]
 
     #Intialize results vector
-    # resultsTbl <- data.frame('rsid'=rep('',length(nonTargetSnps)),'p' = rep(NA,length(nonTargetSnps)), 'coeff'=rep(NA,length(nonTargetSnps)),'rsq'=rep(NA,length(nonTargetSnps)),stringsAsFactors = F)
     snp_names <- unlist(lapply(c('snp','target','int'),function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
     cov_names <- unlist(lapply(cov_names,function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
-    resultsTbl <- read.csv(text = paste(c('rsid',snp_names,cov_names,'rsq'),collapse = ','))
+    resultsTbl <- read.csv(text = paste(c('rsid',snp_names,cov_names,'RMSE'),collapse = ','))
     resultsTbl[1:length(nonTargetSnps),] <- NA
+    a <- Sys.time()
     for(k in 1:length(nonTargetSnps)){
       resultsTbl[k,1] <- nonTargetSnps[k]
       resultsTbl[k,2:ncol(resultsTbl)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes,covariates)
@@ -78,10 +105,10 @@ if(length(args)==0){
   #supply default values
   path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata_with_PC'
-  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+  bgen_file_prefix <- 'test'
   chr <- '10'
   phenotype = 'sbp'
-  targetRS <- 'rs1262894'
+  targetRS <- 'rs603424'
   target_chr <- '10'
   n_cores <- 1
   eur_only <- 1
@@ -92,11 +119,11 @@ if(length(args)==0){
   info <- 0.5
   med=1
   if(out_suffix == ''){
-    path_out <- paste0(path,targetRS,'_',phenotype,'/')
-    path_out_chr <- paste0(path,targetRS,'_',phenotype,'/chr',chr,'/')
+    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
+    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
   }else{
-    path_out <- paste0(path,targetRS,'_',phenotype,'_',out_suffix,'/')
-    path_out_chr <- paste0(path,targetRS,'_',phenotype,'_',out_suffix,'/chr',chr,'/')
+    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
+    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
   }
   system(paste0('mkdir -p ',path_out))
   system(paste0('chmod a+rwx ',path_out))
@@ -143,11 +170,11 @@ if(length(args)==0){
     print(paste0(str[i],"   ",args[i]))
   }
   if(out_suffix == ''){
-    path_out <- paste0(path,targetRS,'_',phenotype,'/')
-    path_out_chr <- paste0(path,targetRS,'_',phenotype,'/chr',chr,'/')
+    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
+    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
   }else{
-    path_out <- paste0(path,targetRS,'_',phenotype,'_',out_suffix,'/')
-    path_out_chr <- paste0(path,targetRS,'_',phenotype,'_',out_suffix,'/chr',chr,'/')
+    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
+    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
   }
   system(paste0('mkdir -p ',path_out))
   system(paste0('chmod a+rwx ',path_out))

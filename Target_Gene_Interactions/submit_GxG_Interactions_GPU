@@ -138,8 +138,8 @@ else
         targetRS=$2
         out_suffix=$3
         eur_only=1
-        cov=$4
-        PC=$5
+        cov='sex,ages,bmi'
+        PC=5
         med=1
         MAF='0.05'
         info='0.5'

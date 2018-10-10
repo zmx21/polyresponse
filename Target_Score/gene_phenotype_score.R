@@ -18,7 +18,7 @@ CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,phenotype,M
   
   return(UKBB_marginal_effect)
 }
-# PKD2L1_SNPs <- CollectBetaCoeff('PKD2L1',1000,500,10)
+# PKD2L1_SNPs <- CollectBetaCoeff('PKD2L1',1000,500,'sbp',0.05,0.5,10)
 
 # SCNN1A_SNPs <- CollectBetaCoeff('SCNN1A',1000,500,10)
 # SCNN1B_SNPs <- CollectBetaCoeff('SCNN1B',1000,500,10)

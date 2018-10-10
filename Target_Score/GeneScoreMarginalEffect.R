@@ -51,10 +51,15 @@ CalcMarginalEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix
 # bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
 # phenotype <- 'sbp'
 
-target_names <- c('SCNN1A','SCNN1B','SCNN1G','SCNN1D','ACE','CACNA1D','CACNA12D1','CACNA12D2','AGTR1','MME','ADRA2B','GPAT2','PDE5A')
-target_sbp <- lapply(target_names,function(x) IterativePruning(x,'sbp',10000,10000,5e-6,0.3,1))
-target_dbp <- lapply(target_names,function(x) IterativePruning(x,'dbp',10000,10000,5e-6,0.3,1))
-saveRDS(target_names,target_sbp,target_dbp,'~/bsu_scratch/target_snps.rds')
+target_names <- c('SCNN1A','SCNN1B','SCNN1G','SCNN1D','ACE','CACNA1D','CACNA1S','CACNA1H','CACNA2D1','CACNA2D2','AGTR1','MME','ADRA2B','GPAT2','PDE5A')
+target_sbp <- lapply(target_names,function(x){
+  result <- IterativePruning(x,'sbp',10000,10000,5e-6,0.3,12)
+  cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
+data.table::fwrite(do.call(rbind,target_sbp),row.names = F,file = '~/bsu_scratch/target_sbp.txt')
+target_dbp <- lapply(target_names,function(x){
+  result <- IterativePruning(x,'dbp',10000,10000,5e-6,0.3,12)
+  cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
+data.table::fwrite(do.call(rbind,target_dbp),row.names = F,file = '~/bsu_scratch/target_dbp.txt')
 
 
 # SCNN1D_sbp <- IterativePruning('SCNN1D','sbp',10000,10000,5e-6,0.3,20)
