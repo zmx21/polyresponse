@@ -125,7 +125,7 @@ echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks
 echo -e "\nExecuting command:\n==================\n$CMD\n"
 
 #eval $CMD
-chr=$1
+chr=$SLURM_ARRAY_TASK_ID
 if [ $chr -eq 0 ]
 then 
 	Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
@@ -133,10 +133,10 @@ else
 	path="~/bsu_scratch/UKB_Data/"
         sample_file_prefix="ukbb_metadata_with_PC"
         bgen_file_prefix="ukb_imp_chr#_HRConly"
-        chr=$1
+        chr=$SLURM_ARRAY_TASK_ID
         phenotype="sbp"
-        targetRS=$2
-        out_suffix=$3
+        targetRS=$1
+        out_suffix=$2
         eur_only=1
         cov='sex,ages,bmi'
         PC=5
@@ -144,5 +144,6 @@ else
         MAF='0.05'
         info='0.5'
         n_cores=12
-        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $PC $med $MAF $info $n_cores
+	chunks=$3
+        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $PC $med $MAF $info $n_cores $chunks
 fi

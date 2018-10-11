@@ -15,7 +15,7 @@ CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes,covariates)
   return(c(as.vector(fit_result[,-1]),fit$s))
 }
 
-RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores){
+RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks){
   chunkSize=50
   
   library(dplyr)
@@ -62,19 +62,30 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
     dosageVector <- dosageVector[,samplesToKeep]
     
-    beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,1,cov='sex,ages,bmi',PC=5,med=1,n_cores,F)$coeff
+    beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
     #Flip alleles such that all are bp lowering
-    dosageVectorTemp <- dosageVector
-    for(i in 1:nrow(dosageVectorTemp)){
+    dosageTarget <- dosageVector
+    for(i in 1:nrow(dosageTarget)){
       if(beta_coeff[i] > 0){
-        dosageVectorTemp[i,] <- 2-dosageVector[i,]
+        dosageTarget[i,] <- 2-dosageVector[i,]
       }
     }
-    dosageVector <- as.vector(abs(beta_coeff) %*% dosageVectorTemp)
+    dosageTarget <- as.vector(abs(beta_coeff) %*% dosageTarget)
   }
+  
+  #Parse chunks argument
+  chunks <- unlist(strsplit(chunks,','))
+  if(length(chunks)==0){
+   chunks <- 1:length(rsIDChunks) 
+  }else{
+    chunks <- as.numeric(chunks)
+    chunks <- chunks[1]:chunks[2]
+  }
+  
   #Run chunks in parallel
-  print(paste0('Calculating Interactions: ',length(rsIDChunks),' chunks'))
-  allResultsTbl <- pbmclapply(1:length(rsIDChunks),function(i) {
+  print(paste0('Calculating Interactions: ',length(chunks),' chunks'))
+  allResultsTbl <- pbmclapply(chunks,function(i) {
+    # i <- 1
     currentRSIdChunk <- rsIDChunks[[i]]
     dosageMatrix <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,rep(chr,length(currentRSIdChunk)))
     
@@ -87,7 +98,6 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     cov_names <- unlist(lapply(cov_names,function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
     resultsTbl <- read.csv(text = paste(c('rsid',snp_names,cov_names,'RMSE'),collapse = ','))
     resultsTbl[1:length(nonTargetSnps),] <- NA
-    a <- Sys.time()
     for(k in 1:length(nonTargetSnps)){
       resultsTbl[k,1] <- nonTargetSnps[k]
       resultsTbl[k,2:ncol(resultsTbl)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes,covariates)
@@ -105,19 +115,19 @@ if(length(args)==0){
   #supply default values
   path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata_with_PC'
-  bgen_file_prefix <- 'test'
-  chr <- '10'
+  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+  chr <- '1'
   phenotype = 'sbp'
-  targetRS <- 'rs603424'
-  target_chr <- '10'
+  targetRS <- 'rs3821843,rs7340705,rs113210396,rs2633731,rs11719824,rs17238364,rs3821856,rs76798021'
   n_cores <- 1
   eur_only <- 1
-  out_suffix <- 'eur_only'
+  out_suffix <- 'test'
   cov <- 'sex,ages,bmi'
   PC <-  5
   MAF <- 0.05
   info <- 0.5
   med=1
+  chunks <- '1,1'
   if(out_suffix == ''){
     path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
     path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
@@ -130,7 +140,7 @@ if(length(args)==0){
   system(paste0('mkdir -p ',path_out_chr))
   system(paste0('chmod a+rwx ',path_out_chr))
 
-}else if (length(args)!= 14){
+}else if (length(args)!= 15){
   stop("You need to supply:\n",
        "# 1: Input Path\n",
        '# 2: Sample File Prefix\n',
@@ -146,6 +156,7 @@ if(length(args)==0){
        "# 12: MAF filter\n",
        "# 13: Info filter\n",
        '# 14: Number of Cores\n',
+       '# 15: Chunks\n',
        "Exiting...", call.=FALSE)
   
 }else{
@@ -163,8 +174,9 @@ if(length(args)==0){
            '# 11: Medication: (add 10 to bp for those taking med)',
            "# 12: MAF cutoff",
            "# 13: Info cutoff",
-           '# 14: Number of Cores:')
-  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores')
+           '# 14: Number of Cores:',
+           '# 15: Chunks:')
+  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores','chunks')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
@@ -182,4 +194,4 @@ if(length(args)==0){
   system(paste0('chmod a+rwx ',path_out_chr))
 }
 RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out_chr,eur_only,
-                   cov,PC,med,MAF,info,n_cores)
+                   cov,PC,med,MAF,info,n_cores,chunks)

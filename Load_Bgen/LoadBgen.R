@@ -35,10 +35,10 @@ LoadBgen <- function(path,bgen_file_prefix,rsIDs,chr=NULL){
   for(i in 1:length(uniqueFiles)){
     currentFile <- uniqueFiles[i]
     currentrsIDs <- rsIDs[which(bgen_file_prefix == currentFile)]
-    a <- Sys.time()
+    # a <- Sys.time()
     currentAlleleProbMatrix <- rbgen::bgen.load(filename = paste0(currentFile,'.bgen'),
                                       rsids = currentrsIDs)$data
-    print(Sys.time() - a)
+    # print(Sys.time() - a)
     resultList[[i]] <- currentAlleleProbMatrix[,,'g=1'] + 2*currentAlleleProbMatrix[,,'g=2']
   }
   setwd(curwd)
