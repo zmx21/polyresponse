@@ -75,8 +75,8 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Parse chunks argument
   chunks <- unlist(strsplit(chunks,','))
-  if(length(chunks)==0){
-   chunks <- 1:length(rsIDChunks) 
+  if(chunks[2]=='end'){
+   chunks <- as.numeric(chunks[1]):length(rsIDChunks) 
   }else{
     chunks <- as.numeric(chunks)
     chunks <- chunks[1]:chunks[2]
@@ -127,7 +127,7 @@ if(length(args)==0){
   MAF <- 0.05
   info <- 0.5
   med=1
-  chunks <- '1,1'
+  chunks <- '1,end'
   if(out_suffix == ''){
     path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
     path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
