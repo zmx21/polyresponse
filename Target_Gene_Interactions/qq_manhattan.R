@@ -11,18 +11,19 @@ anno_db <- tbl(anno_con,'all_snp_stats')
 
 
 #Read in results
-results_tbl <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/rs1262894_sbp_eur_age_sex_bmi_PC_med5/chr10.txt'),header = T)
-# colnames(results_tbl) <- c('rsid','p','coeff','rsq')
-results_tbl$p_bonf <- p.adjust(results_tbl$p_int,method = 'bonferroni')
+results_tbl <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/rs1262894_sbp_eur_age_sex_bmi_PC_med5/all_chr.txt'),header = T)
+results_tbl$fdr <- p.adjust(results_tbl$p_int,method = 'fdr')
 
-sig_results <- results_tbl %>% dplyr::filter(p_bonf<0.2)
+sig_results <- results_tbl %>% dplyr::filter(fdr<0.9)
 #Join with annotation information
 sig_results_annotation <- anno_db %>% dplyr::select(rsid,chromosome,position) %>% dplyr::filter(rsid %in% sig_results$rsid) %>% collect()
 sig_results <- dplyr::left_join(sig_results,sig_results_annotation,by=c('rsid'='rsid'))
 
 #Mahattan plot
-manhattan(data.frame(BP=as.numeric(sig_results$position),CHR=as.numeric(sig_results$chromosome),P=sig_results$p_bonf,SNP=sig_results$rsid),suggestiveline = F,genomewideline = -log10(0.05),annotateTop = T,ylab='-log((',annotatePval = 0.0001)
+manhattan(data.frame(BP=as.numeric(sig_results$position),CHR=as.numeric(sig_results$chromosome),P=sig_results$p_int,SNP=sig_results$rsid),suggestiveline = F,genomewideline = -log10(5e-8),annotateTop = T,ylab='-log(p-value)',annotatePval = 1e-8)
 
+chr12 <- sig_results %>% dplyr::filter(as.numeric(chromosome)==12)
+manhattan(data.frame(BP=as.numeric(chr12$position),CHR=as.numeric(chr12$chromosome),P=chr12$p_int,SNP=chr12$rsid),suggestiveline = F,genomewideline = -log10(5e-8),annotateTop = T,ylab='-log(p-value)',annotatePval = 1e-8,main='chr12')
 
 #QQPlot
 #Convert p values to chi-sq.
@@ -36,7 +37,7 @@ qq.chisq <- function (x, df = 1, x.max, main = "QQ plot", sub = paste("Expected 
                                                           df, " df)", sep = ""), xlab = "Expected", ylab = "Observed", 
           conc = c(0.025, 0.975), overdisp = FALSE, trim = 0.5, slope.one = FALSE, 
           slope.lambda = FALSE, pvals = FALSE, thin = c(0.25, 50), 
-          oor.pch = 24, col.shade = "gray",ylim=c(0,35),xlim=c(0,30), ...) 
+          oor.pch = 24, col.shade = "gray",ylim=c(),xlim=c(), ...) 
 {
   shade <- function(x1, y1, x2, y2, color = col.shade) {
     n <- length(x2)
@@ -88,8 +89,22 @@ qq.chisq <- function (x, df = 1, x.max, main = "QQ plot", sub = paste("Expected 
     }
     else pvals <- FALSE
   }
-  plot(c(0, right), c(0, top), type = "n", xlab = xlab, ylab = ylab, 
-       main = main, sub = sub,ylim=ylim,xlim=xlim)
+  if(length(xlim)==0 & length(ylim)==0){
+    plot(c(0, right), c(0, top), type = "n", xlab = xlab, ylab = ylab, 
+         main = main, sub = sub)
+    
+  }else if(length(xlim)==0){
+    plot(c(0, right), c(0, top), type = "n", xlab = xlab, ylab = ylab, 
+         main = main, sub = sub,ylim=ylim)
+    
+  }else if(length(ylim)==0){
+    plot(c(0, right), c(0, top), type = "n", xlab = xlab, ylab = ylab, 
+         main = main, sub = sub,xlim=xlim)
+    
+  }else{
+    plot(c(0, right), c(0, top), type = "n", xlab = xlab, ylab = ylab, 
+         main = main, sub = sub,ylim=ylim,xlim=xlim)
+  }
   if (pvals) {
     nvals <- length(lp.vals)
     for (i in 1:nvals) axis(side = 4, at = chi2.vals[i], 
@@ -155,6 +170,9 @@ qq.chisq <- function (x, df = 1, x.max, main = "QQ plot", sub = paste("Expected 
   c(N = N, omitted = N - Np, lambda = lambda)
 }
 
+# rand_sample <- sample(1:nrow(results_tbl),size = 1000000,replace = F)
+qq.chisq(results_tbl$t_int^2,main = 'rs1262894 all chr (Age,Sex,BMI,5PC)')
+
 # results_tbl$chi_sq <- unlist(pbmclapply(results_tbl$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
 # qq.chisq(results_tbl$chi_sq,main = 'rs1262894 chr10 EUR (Age,Sex,BMI)')
 # 
@@ -162,4 +180,4 @@ qq.chisq <- function (x, df = 1, x.max, main = "QQ plot", sub = paste("Expected 
 # qq.chisq(maf_info_filtered$chi_sq,main = 'rs1262894 chr10 EUR MAF and Info Filtered')
 # 
 
-qq.chisq(results_tbl$t_int^2,main = 'rs1262894 chr10 EUR \n (Age,Sex,BMI,5 PC)')
+# qq.chisq(results_tbl$t_int^2,main = 'rs1262894 chr10 EUR \n (Age,Sex,BMI,5 PC)')
