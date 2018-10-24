@@ -8,9 +8,9 @@ else
         sample_file_prefix="ukbb_metadata_with_PC"
         bgen_file_prefix="ukb_imp_chr#_HRConly"
         chr=$1
-        phenotype="sbp"
+        phenotype="dbp"
         targetRS=$2
-        out_suffix=$3
+        out_suffix='fullcorrection'
         eur_only=1
         cov='sex,ages,bmi'
         PC=5
@@ -18,6 +18,6 @@ else
         MAF='0.01'
         info='0.5'
         n_cores=30
-	chunks=$4
+	chunks=$3
         Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $PC $med $MAF $info $n_cores $chunks
 fi

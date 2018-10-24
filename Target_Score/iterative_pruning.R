@@ -53,15 +53,20 @@ IterativePruning <- function(gene_name,phenotype,upstream_dist,downstream_dist,p
     
   }
   print('Finding LD')
-  LDMatrix <- GetLDMatrix(betaCoeffFilt$rsid)
-  # temp <- LDMatrix
-  # for(i in 1:nrow(LDMatrix)){
-  #   for(j in 1:ncol(LDMatrix)){
-  #     if(is.na(LDMatrix[i,j])){
-  #       LDMatrix[i,j] <- FindClosestNeighbourLD(temp,rownames(LDMatrix)[i],colnames(LDMatrix)[j])
-  #     }
-  #   }
-  # }
+  #Load phenotype information and covariates
+  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
+  sample_file_prefix <- 'ukbb_metadata_with_PC'
+  cov_names <- c('sex','ages','bmi','PC1','PC2','PC3','PC4','PC5')
+  eur_only <- 1
+  phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only=1,med=1)
+  samplesToKeep <- phenotypesAndCov$samplesToKeep
+  
+  #Load dosage matrix of all inlcuded SNPS
+  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+  dosageMatrix <- LoadBgen(path,bgen_file_prefix,betaCoeffFilt$rsid)
+  dosageMatrix <- dosageMatrix[,samplesToKeep]
+  
+  LDMatrix <- cor(t(dosageMatrix)) ^ 2
   betaCoeffFilt <- dplyr::arrange(betaCoeffFilt,p)
   inclSet <- betaCoeffFilt$rsid[1]
   for(i in 2:nrow(betaCoeffFilt)){

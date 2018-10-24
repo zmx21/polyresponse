@@ -1,0 +1,6 @@
+chr_start=1
+chr_end=22
+for i in $(seq $chr_start 1 $chr_end)
+do
+	sbatch -J "chr"$i ./submit_Calculate_Dosage $i
+done

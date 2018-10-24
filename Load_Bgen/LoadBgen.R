@@ -40,6 +40,10 @@ LoadBgen <- function(path,bgen_file_prefix,rsIDs,chr=NULL){
                                       rsids = currentrsIDs)$data
     # print(Sys.time() - a)
     resultList[[i]] <- currentAlleleProbMatrix[,,'g=1'] + 2*currentAlleleProbMatrix[,,'g=2']
+    if(is.null(rownames(resultList[[i]]))){
+      resultList[[i]] <- as.matrix(t(resultList[[i]]))
+      rownames(resultList[[i]]) <- currentrsIDs
+    }
   }
   setwd(curwd)
   dosageMatrix <- do.call(rbind,resultList)
@@ -82,12 +86,12 @@ FindAllRSIds <- function(chr,MAF=-Inf,Info=-Inf){
   anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
   anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
   
-  if(as.numeric(chr) < 10){
-    chr <- paste0('0',chr)
-  }
+  # if(as.numeric(chr) < 10){
+  #   chr <- paste0('0',chr)
+  # }
   
   #Get all rsids meeting criteria
-  rsIDs <- anno_db %>% dplyr::filter(chromosome==chr & minor_allele_frequency > MAF & info > Info) %>% dplyr::select(rsid) %>% collect()
+  rsIDs <- anno_db %>% dplyr::filter(chromosome==chr & as.numeric(minor_allele_frequency) > MAF & as.numeric(info) > Info) %>% dplyr::select(rsid) %>% collect()
   setwd(curwd)
   RSQLite::dbDisconnect(anno_con)
   return(rsIDs)
