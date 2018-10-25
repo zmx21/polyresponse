@@ -19,7 +19,7 @@
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
 #SBATCH --ntasks=12
 #! How much wallclock time will be required?
-#SBATCH --time=10-00:00:00
+#SBATCH --time=1-00:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -134,7 +134,7 @@ else
         sample_file_prefix="ukbb_metadata_with_PC"
         bgen_file_prefix="ukb_imp_chr#_HRConly"
         chr=$SLURM_ARRAY_TASK_ID
-        phenotype="dbp"
+        phenotype="sbp"
         targetRS=$1
         out_suffix=$2
         eur_only=1

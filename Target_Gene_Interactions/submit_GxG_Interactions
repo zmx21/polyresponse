@@ -134,7 +134,7 @@ else
         sample_file_prefix="ukbb_metadata_with_PC"
         bgen_file_prefix="ukb_imp_chr#_HRConly"
         chr=$SLURM_ARRAY_TASK_ID
-        phenotype="dbp"
+        phenotype="sbp"
         targetRS=$1
         out_suffix=$2
         eur_only=1

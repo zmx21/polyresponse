@@ -1,5 +1,5 @@
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-# source('~/MRC_BSU_Internship/Target_Score/iterative_pruning.R')
+source('~/MRC_BSU_Internship/Target_Score/iterative_pruning.R')
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
 
 library(RcppEigen)

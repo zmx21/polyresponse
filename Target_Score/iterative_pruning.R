@@ -54,7 +54,7 @@ IterativePruning <- function(gene_name,phenotype,upstream_dist,downstream_dist,p
   }
   print('Finding LD')
   #Load phenotype information and covariates
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
+  path <-  '~/bsu_scratch/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata_with_PC'
   cov_names <- c('sex','ages','bmi','PC1','PC2','PC3','PC4','PC5')
   eur_only <- 1
