@@ -1,6 +1,7 @@
 library(dplyr)
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
 LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS){
   #Load rsid which passed interaction threshold.
   interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int < p_val_thresh)
@@ -17,10 +18,11 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   # annotations <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% dplyr::select(rsid,minor_allele_frequency,info,chromosome) %>% collect()
   interaction_results <- interaction_results %>% dplyr::arrange(p_int) %>% dplyr::left_join(annotations,by=c('rsid'='rsid'))
   interaction_results <- interaction_results %>% dplyr::filter(as.numeric(minor_allele_frequency) > MAF & as.numeric(info) > Info) %>% dplyr::select(rsid,p_int,chromosome)
+  interaction_results <- interaction_results %>% dplyr::distinct(rsid,.keep_all=T)
   #Load phenotype information and covariates
   path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata_with_PC'
-  cov_names <- c('sex','ages','bmi','PC1','PC2','PC3','PC4','PC5')
+  cov_names <- c('sex','ages','bmi')
   eur_only <- 1
   phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only=1,med=1)
   samplesToKeep <- phenotypesAndCov$samplesToKeep
@@ -73,7 +75,7 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
     dosageVector <- dosageVector[,samplesToKeep]
     
     beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,
-                                     eur_only,cov=paste(cov_names,sep = ','),PC=5,med=1,1,F)$coeff
+                                     eur_only,cov=paste(cov_names,collapse = ','),PC=5,med=1,1,F)$coeff
     #Flip alleles such that all are bp lowering
     dosageTarget <- dosageVector
     for(i in 1:nrow(dosageTarget)){
@@ -85,8 +87,6 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   }
   
   
-  return(list(dosageTarget = round(dosageTarget,0),dosageMatrix = t(round(dosageMatrix,0)),
+  return(list(dosageTarget = dosageTarget,dosageMatrix = t(round(dosageMatrix,0)),
               phenotypes = phenotypesAndCov$phenotypes,covariates = phenotypesAndCov$covariates))
 }
-interaction_path <- '~/parsed_interaction/ACE_sbp.txt'
-test <- LoadDosage(p_val_thresh = 1e-5,interaction_path,'sbp',0.3,0.05,0.5,'rs1262894')

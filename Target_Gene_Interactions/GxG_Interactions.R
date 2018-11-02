@@ -15,7 +15,7 @@ CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes,covariates)
   return(c(as.vector(fit_result[,-1]),fit$s))
 }
 
-RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks){
+RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks,training_set){
   chunkSize=50
   
   library(dplyr)
@@ -52,15 +52,25 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Split rsid based on comma
   targetRS <- unlist(strsplit(targetRS,split = ','))
-  
-  #Genotype info of target gene
+  dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
+
   if(length(targetRS) < 2){
     dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
+    #keep samples without missing information
     dosageTarget <- dosageTarget[,samplesToKeep]
+    #keep only samples in training set
+    trainingSet <- readRDS(file = training_set)
+    dosageTarget <- dosageTarget[,trainingSet]
+    
   }else{
     #Get marginal effects of rsid
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
+    #keep samples without missing information
     dosageVector <- dosageVector[,samplesToKeep]
+    #keep only samples in training set
+    trainingSet <- readRDS(file = training_set)
+    dosageVector <- dosageVector[,trainingSet]
+    
     
     beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
     #Flip alleles such that all are bp lowering
@@ -91,8 +101,12 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     
     #Keep SNPs other than the target SNP    
     nonTargetSnps <- setdiff(rownames(dosageMatrix),targetRS)
+    #Keep samples without missing info
     dosageMatrix <- dosageMatrix[,samplesToKeep]
-
+    #Keep samples in training set
+    dosageMatrix <- dosageMatrix[,trainingSet]
+    
+    
     #Intialize results vector
     snp_names <- unlist(lapply(c('snp','target','int'),function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
     cov_names <- unlist(lapply(cov_names,function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
@@ -128,6 +142,7 @@ if(length(args)==0){
   info <- 0.5
   med=1
   chunks <- '1,end'
+  training_set <- '~/bsu_scratch/UKB_Data/training_set.rds'
   if(out_suffix == ''){
     path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
     path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
@@ -140,7 +155,7 @@ if(length(args)==0){
   system(paste0('mkdir -p ',path_out_chr))
   system(paste0('chmod a+rwx ',path_out_chr))
 
-}else if (length(args)!= 15){
+}else if (length(args)!= 16){
   stop("You need to supply:\n",
        "# 1: Input Path\n",
        '# 2: Sample File Prefix\n',
@@ -157,6 +172,7 @@ if(length(args)==0){
        "# 13: Info filter\n",
        '# 14: Number of Cores\n',
        '# 15: Chunks\n',
+       '# 16: Training Set\n',
        "Exiting...", call.=FALSE)
   
 }else{
@@ -175,8 +191,9 @@ if(length(args)==0){
            "# 12: MAF cutoff",
            "# 13: Info cutoff",
            '# 14: Number of Cores:',
-           '# 15: Chunks:')
-  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores','chunks')
+           '# 15: Chunks:',
+           '# 16: Training Set:')
+  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores','chunks','training_set')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
@@ -194,4 +211,4 @@ if(length(args)==0){
   system(paste0('chmod a+rwx ',path_out_chr))
 }
 RunGxGInteractions(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out_chr,eur_only,
-                   cov,PC,med,MAF,info,n_cores,chunks)
+                   cov,PC,med,MAF,info,n_cores,chunks,training_set)

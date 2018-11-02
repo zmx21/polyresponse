@@ -1,4 +1,5 @@
 #Load phenotype table, according to filters and covariates specified.
+library(dplyr)
 LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,med){
   #Load phenotype table
   samplePhenoTbl <- data.table::fread(paste0(path,sample_file_prefix,'.csv'),

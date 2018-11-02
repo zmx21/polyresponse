@@ -123,28 +123,13 @@ fi
 echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)"
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
-
-#eval $CMD
-chr=$SLURM_ARRAY_TASK_ID
-if [ $chr -eq 0 ]
-then
-        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R'
-else
-        path="~/bsu_scratch/UKB_Data/"
-        sample_file_prefix="ukbb_metadata_with_PC"
-        bgen_file_prefix="ukb_imp_chr#_HRConly"
-        chr=$SLURM_ARRAY_TASK_ID
-        phenotype="sbp"
-        targetRS=$1
-        out_suffix=$2
-        eur_only=1
-        cov='sex,ages,bmi'
-        PC=5
-        med=1
-        MAF='0.01'
-        info='0.5'
-        n_cores=16
-        chunks='1,end'
-	training_set='~/bsu_scratch/UKB_Data/training_set.rds'
-        Rscript '/home/zmx21/MRC_BSU_Internship/Target_Gene_Interactions/GxG_Interactions.R' $path $sample_file_prefix $bgen_file_prefix $chr $phenotype $targetRS $out_suffix $eur_only $cov $PC $med $MAF $info $n_cores $chunks $training_set
-fi
+interaction_path=$1
+p_val_thresh='5e-5'
+target_rs=$2
+phenotype=$3
+outpath='~/bsu_scratch/Random_Forest/'
+n_boot=5000
+n_rand='sqrt'
+min_node=$SLURM_ARRAY_TASK_ID
+n_cores=16
+Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/RandomForest.R' $interaction_path $p_val_thresh $target_rs $phenotype $outpath $n_boot $n_rand $min_node $n_cores
