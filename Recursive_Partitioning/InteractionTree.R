@@ -56,13 +56,18 @@ FindOptimalSplit <- function(dosageTarget,dosageMatrix,phenotypes,covariates,n_f
   return(bestSplitInfo)
 }
 #Construct leaf node by fitting main effect model of target.
-ConstructLeafNode <- function(dosageTarget,phenotypes,covariates,nodeID){
+FitMainEffectModel <- function(dosageTarget,phenotypes,covariates){
   mdlMat <- cbind('Intercept' = rep(1,length(dosageTarget)),'treatment' = as.vector(dosageTarget),as.matrix(covariates))
   fit <- RcppEigen::fastLmPure(y = phenotypes,X = mdlMat)
+  return(fit)
+}
+ConstructLeafNode <- function(dosageTarget,phenotypes,covariates,nodeID){
+  fit <- FitMainEffectModel(dosageTarget,phenotypes,covariates)
   node <- partykit::partynode(id = nodeID,info = paste0(signif(fit$coeff['treatment'],4),"  ",length(dosageTarget)))
   return(node)
 }
 
+#Extract subset of data
 SubsetData <- function(data,subset){
   if(is.null(nrow(data))){
     data[subset]

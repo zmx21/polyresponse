@@ -124,12 +124,12 @@ echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
 interaction_path=$1
-p_val_thresh='5e-5'
+p_val_thresh=$4
 target_rs=$2
 phenotype=$3
 outpath='~/bsu_scratch/Random_Forest/'
 n_boot=5000
-n_rand=7
-min_node=$SLURM_ARRAY_TASK_ID
+n_rand='0.75'
+min_node=$(($SLURM_ARRAY_TASK_ID * 100))
 n_cores=12
 Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/RandomForest.R' $interaction_path $p_val_thresh $target_rs $phenotype $outpath $n_boot $n_rand $min_node $n_cores

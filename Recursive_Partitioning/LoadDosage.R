@@ -16,6 +16,7 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   #Get all rsids meeting criteria
   annotations <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
   # annotations <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% dplyr::select(rsid,minor_allele_frequency,info,chromosome) %>% collect()
+  dbDisconnect(anno_con)
   interaction_results <- interaction_results %>% dplyr::arrange(p_int) %>% dplyr::left_join(annotations,by=c('rsid'='rsid'))
   interaction_results <- interaction_results %>% dplyr::filter(as.numeric(minor_allele_frequency) > MAF & as.numeric(info) > Info) %>% dplyr::select(rsid,p_int,chromosome)
   interaction_results <- interaction_results %>% dplyr::distinct(rsid,.keep_all=T)
@@ -69,6 +70,7 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   if(length(targetRS) < 2){
     dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
     dosageTarget <- dosageTarget[,samplesToKeep]
+    names(dosageTarget) <- colnames(dosageMatrix)
   }else{
     #Get marginal effects of rsid
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
@@ -84,6 +86,7 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
       }
     }
     dosageTarget <- as.vector(abs(beta_coeff) %*% dosageTarget)
+    names(dosageTarget) <- colnames(dosageMatrix)
   }
   
   

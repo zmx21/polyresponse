@@ -1,29 +1,9 @@
 source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/LoadDosage.R')
+source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
 library(pbmcapply)
 library(partykit)
 library(parallel)
-ExtractSubSample <- function(data,boostrap_index,outofbag_index){
-  bootstrap <- data
-  outofbag <- data
-  
-  for(i in 1:length(data)){
-    if(is.null(nrow(data[[i]]))){
-      bootstrap[[i]] <- data[[i]][boostrap_index]
-      outofbag[[i]] <- data[[i]][outofbag_index]
-    }else{
-      sampleDim <- which.max(dim(data[[i]]))
-      if(sampleDim == 1){
-        bootstrap[[i]] <- data[[i]][boostrap_index,]
-        outofbag[[i]] <- data[[i]][outofbag_index,]
-      }else{
-        bootstrap[[i]] <- data[[i]][,boostrap_index]
-        outofbag[[i]] <- data[[i]][,outofbag_index]
-      }
-    }
-  }
-  return(list(bootstrap = bootstrap,outofbag = outofbag))
-}
 VariableImportance <- function(bootstrapTree,outOfBagData){
   #Send out of bag samples down tree to calculate total interaction
   totalInteraction <- sum(CalculateTotalInteraction(as.data.frame(outOfBagData$dosageMatrix),bootstrapTree,outOfBagData$dosageTarget,outOfBagData$phenotypes,outOfBagData$covariates))
@@ -55,7 +35,7 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     currentSubsample <- ExtractSubSample(data,bootstrapIndex,outofbagIndex)
     currentBootstrap <- currentSubsample$bootstrap
     currentOutOfBag <- currentSubsample$outofbag
-    if(is.na(as.numeric(n_features))){
+    if(suppressWarnings(is.na(as.numeric(n_features)))){
       n_features <- floor(eval(parse(text = paste0(n_features,'(',dim(currentBootstrap$dosageMatrix)[2],')'))))
     }else if(as.numeric(n_features) <= 1){
       n_features <- floor(as.numeric(n_features) * dim(currentBootstrap$dosageMatrix)[2])
@@ -69,7 +49,7 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     variableImportance <- VariableImportance(bootstrapPartyTree,currentOutOfBag)
     
     #Store current bootstrapTree
-    bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,variableImportance=variableImportance)
+    bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,variableImportance=variableImportance,bootstrapIndex=bootstrapIndex,outofbagIndex=outofbagIndex)
     saveRDS(bootstrapTreeObj,paste0(outpath,'tree',i,'.rds'))
   },mc.cores = n_cores,ignore.interactive = T)
 }
@@ -77,19 +57,19 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  interaction_path <- '~/parsed_interaction/CACNA1D_sbp.txt'
+  interaction_path <- '~/parsed_interaction/SCNN1D_sbp.txt'
   p_val_thresh <-  5e-5
-  targetRS <-  'rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856'
+  targetRS <-  'rs1262894'
   phenotype <- 'sbp'
   outpath <- '~/bsu_scratch/Random_Forest/'
   n_bootstrap <- 1
   n_features <- 'sqrt'
-  min_node_size <- 4000
+  min_node_size <- 5000
   n_cores <- 16
   targetRS <- unlist(strsplit(targetRS,split = ','))
   outpath <- paste0(outpath,paste(targetRS,collapse = '_'),'_',phenotype,'/')
   system(paste0('mkdir -p ',outpath))
-  suffix <- paste(n_features,min_node_size,sep = '_')
+  suffix <- paste(n_features,min_node_size,p_val_thresh,sep = '_')
   system(paste0('mkdir -p ',outpath,suffix,'/'))
   
 }else if (length(args) != 9){
@@ -125,11 +105,12 @@ if(length(args)==0){
   
   outpath <- paste0(outpath,paste(targetRS,collapse = '_'),'_',phenotype,'/')
   system(paste0('mkdir -p ',outpath))
-  suffix <- paste(n_features,min_node_size,sep = '_')
+  suffix <- paste(n_features,min_node_size,p_val_thresh,sep = '_')
   system(paste0('mkdir -p ',outpath,suffix,'/'))
   
 }
 data <- LoadDosage(as.numeric(p_val_thresh),interaction_path,phenotype,0.3,0.05,0.5,targetRS)
+saveRDS(data,file = paste0(outpath,'data.rds'))
 training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
 CreateRandomForest(training_set,floor(nrow(training_set$dosageMatrix)*(2/3)),as.numeric(n_bootstrap),n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/'),as.numeric(n_cores))

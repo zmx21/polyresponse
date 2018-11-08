@@ -1,0 +1,44 @@
+Changed directory to /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning.
+
+JobID: 6556523
+======
+Time: Thu Nov  8 12:19:36 GMT 2018
+Running on master node: cpu-k-28
+Current directory: /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning
+
+Nodes allocated:
+================
+cpu-k-28
+
+numtasks=16, numnodes=1, mpi_tasks_per_node=16 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+
+
+Loading required package: grid
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: methods
+Loading required package: parallel
+Loading required package: future
+Warning messages:
+1: In mclapply(X, FUN, ..., mc.cores = mc.cores) :
+  all scheduled cores encountered errors in user code
+2: In mclapply(X, FUN, ..., mc.cores = mc.cores) :
+  all scheduled cores encountered errors in user code
+3: In mclapply(X, FUN, ..., mc.cores = mc.cores) :
+  all scheduled cores encountered errors in user code
+4: In mclapply(X, FUN, ..., mc.cores = mc.cores) :
+  all scheduled cores encountered errors in user code
+5: In mclapply(X, FUN, ..., mc.cores = mc.cores) :
+  all scheduled cores encountered errors in user code

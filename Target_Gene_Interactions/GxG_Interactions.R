@@ -60,7 +60,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     dosageTarget <- dosageTarget[,samplesToKeep]
     #keep only samples in training set
     trainingSet <- readRDS(file = training_set)
-    dosageTarget <- dosageTarget[,trainingSet]
+    dosageTarget <- dosageTarget[trainingSet]
     
   }else{
     #Get marginal effects of rsid
@@ -121,6 +121,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
 }
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
+print(args)
 ##args is now a list of character vectors
 ## First check to see if arguments are passed.
 ## Then cycle through each element of the list and evaluate the expressions.
@@ -132,7 +133,7 @@ if(length(args)==0){
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   chr <- '1'
   phenotype = 'sbp'
-  targetRS <- 'rs3821843,rs7340705,rs113210396,rs2633731,rs11719824,rs17238364,rs3821856,rs76798021'
+  targetRS <- 'rs1262894'
   n_cores <- 1
   eur_only <- 1
   out_suffix <- 'test'
