@@ -2,6 +2,7 @@ library(dplyr)
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
 source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
+source('~/MRC_BSU_Internship/Target_Gene_Interactions/CalcInteractions.R')
 LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS){
   #Load rsid which passed interaction threshold.
   interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int < p_val_thresh)
@@ -25,52 +26,16 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   sample_file_prefix <- 'ukbb_metadata_with_PC'
   cov_names <- c('sex','ages','bmi')
   eur_only <- 1
-  phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,cov_names,eur_only=1,med=1)
+  
+  #Load phenotype and samples to keep
+  phenotypesAndCov <- LoadPhenotype(path,sample_file_prefix,phenotype,c(cov_names,'PC1','PC2','PC3','PC4','PC5'),eur_only=1,med=1)
   samplesToKeep <- phenotypesAndCov$samplesToKeep
   
-  #Load dosage matrix of all inlcuded SNPS
-  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  dosageMatrix <- LoadBgen(path,bgen_file_prefix,interaction_results$rsid)
-  dosageMatrix <- dosageMatrix[,samplesToKeep]
-  
-  #Generate independent set of predictors
-  uniqueChr <- unique(interaction_results$chromosome)
-  inclSet <- c()
-  for(chr in uniqueChr){
-    currentChr <- dplyr::filter(interaction_results,chromosome==chr)
-    inclSet <- c(inclSet,currentChr$rsid[1])
-    if(nrow(currentChr) > 1){
-      LDMatrix <- cor(t(dosageMatrix[currentChr$rsid,])) ^ 2
-      # LDMatrix <- GetLDMatrix(currentChr$rsid)
-      currentChr <- dplyr::arrange(currentChr,p_int)
-      for(i in 2:nrow(currentChr)){
-        ldComparison = tryCatch({
-          LDMatrix[currentChr$rsid[i],inclSet]
-        }, warning = function(w) {
-          ldComparison <- NA
-        }, error = function(e) {
-          ldComparison <- NA
-        })
-        if(any(is.na(ldComparison)) | any(ldComparison > r2_thresh)){
-          next
-        }
-        inclSet <- c(inclSet,currentChr$rsid[i])
-      }
-    }
-  }
-  #only keep included set of SNPs in dosage matrix
-  dosageMatrix <- dosageMatrix[inclSet,]
-  
-  #Name phenotypes and covariates
-  names(phenotypesAndCov$phenotypes) <- colnames(dosageMatrix)
-  rownames(phenotypesAndCov$covariates) <- colnames(dosageMatrix)
-  
-  
   #Dosage of target gene
+  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   if(length(targetRS) < 2){
     dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
     dosageTarget <- dosageTarget[,samplesToKeep]
-    names(dosageTarget) <- colnames(dosageMatrix)
   }else{
     #Get marginal effects of rsid
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
@@ -86,10 +51,56 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
       }
     }
     dosageTarget <- as.vector(abs(beta_coeff) %*% dosageTarget)
-    names(dosageTarget) <- colnames(dosageMatrix)
   }
   
   
-  return(list(dosageTarget = dosageTarget,dosageMatrix = t(round(dosageMatrix,0)),
+  #Generate independent set of predictors
+  uniqueChr <- unique(interaction_results$chromosome)
+  inclSet <- c()
+  inclSetDosage <- matrix(nrow = sum(samplesToKeep),ncol = 0)
+  pb = txtProgressBar()
+  for(chr in uniqueChr){
+    # setTxtProgressBar(pb,value = which(chr == uniqueChr)/length(uniqueChr))
+    currentChr <- dplyr::filter(interaction_results,chromosome==chr) %>% dplyr::arrange(p_int)
+    inclSet <- c(inclSet,currentChr$rsid[1])
+    currentChrDosage <- as.matrix(LoadBgen(path,bgen_file_prefix,currentChr$rsid[1])[,samplesToKeep])
+    if(min(dim(currentChrDosage)) > 1){
+      names(dosageTarget) <- rownames(currentChrDosage)
+      interactionSig <- apply(currentChrDosage,1,function(x) CalcInteractions(as.vector(x),dosageTarget,phenotypesAndCov$phenotypes,as.matrix(phenotypesAndCov$covariates))[12])
+      currentChrDosage <- as.matrix(currentChrDosage[which.min(interactionSig),])
+    }
+    if(nrow(currentChr) > 1){
+      for(i in 2:nrow(currentChr)){
+        currentRS <- currentChr$rsid[i]
+        currentDosage <- LoadBgen(path,bgen_file_prefix,currentChr$rsid[i])
+        currentDosage <- as.matrix(currentDosage[,samplesToKeep])
+        if(min(dim(currentDosage)) > 1){
+          names(dosageTarget) <- rownames(currentChrDosage)
+          interactionSig <- apply(currentDosage,1,function(x) CalcInteractions(as.vector(x),dosageTarget,phenotypesAndCov$phenotypes,as.matrix(phenotypesAndCov$covariates))[12])
+          currentDosage <- as.matrix(currentDosage[which.min(interactionSig),])
+        }
+        #Calculate correlation with every snp in the included set
+        if(ncol(currentChrDosage)==1){
+          pairwiseLD <- cor(as.vector(t(currentDosage)),as.vector(t(currentChrDosage))) ^ 2
+        }else{
+          pairwiseLD <- cor(currentDosage,currentChrDosage) ^ 2
+        }
+        #don't include snp if exceed correlation threshold
+        if(any(pairwiseLD > r2_thresh)){
+          next
+        }
+        inclSet <- c(inclSet,currentRS)
+        currentChrDosage <- cbind(currentChrDosage,currentDosage)
+      }
+    }
+    inclSetDosage <- cbind(inclSetDosage,currentChrDosage)
+  }
+  dosageMatrix <- inclSetDosage
+  colnames(dosageMatrix) <- inclSet
+  #Name phenotypes and covariates
+  names(phenotypesAndCov$phenotypes) <- rownames(dosageMatrix)
+  rownames(phenotypesAndCov$covariates) <- rownames(dosageMatrix)
+  names(dosageTarget) <- rownames(dosageMatrix)
+  return(list(dosageTarget = dosageTarget,dosageMatrix = round(dosageMatrix,0),
               phenotypes = phenotypesAndCov$phenotypes,covariates = phenotypesAndCov$covariates))
 }

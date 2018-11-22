@@ -1,0 +1,24 @@
+Changed directory to /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning.
+
+JobID: 6890532
+======
+Time: Thu Nov 22 12:13:51 GMT 2018
+Running on master node: gpu-k-8
+Current directory: /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning
+
+Nodes allocated:
+================
+gpu-k-8
+
+numtasks=1, numnodes=1, mpi_tasks_per_node=1 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+
+
+Error in gzfile(file, "rb") : cannot open the connection
+Calls: GeneratePermutatedGenoMatrix -> readRDS -> gzfile
+In addition: Warning message:
+In gzfile(file, "rb") :
+  cannot open compressed file '/home/zmx21/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/data_p_5e-05.rds', probable reason 'No such file or directory'
+Execution halted

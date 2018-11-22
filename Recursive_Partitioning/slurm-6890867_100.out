@@ -1,0 +1,66 @@
+Changed directory to /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning.
+
+JobID: 6890867
+======
+Time: Thu Nov 22 13:02:03 GMT 2018
+Running on master node: gpu-k-24
+Current directory: /home/zmx21/MRC_BSU_Internship/Recursive_Partitioning
+
+Nodes allocated:
+================
+gpu-k-24
+
+numtasks=12, numnodes=1, mpi_tasks_per_node=12 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+
+
+Loading required package: grid
+  node_size      thresh     n_cores tree_chunks 
+    "10000"      "1e-5"        "12"     "1:500" 
+ [1]   1   2   3   4   5   6   7   8   9  10  11 500
+Garbage collection 65 = 20+7+38 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (75%)
+ [1] 12 13 14 15 16 17 18 19 20 21 22 23
+Garbage collection 67 = 21+7+39 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 24 25 26 27 28 29 30 31 32 33 34 35
+Garbage collection 69 = 22+7+40 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 36 37 38 39 40 41 42 43 44 45 46 47
+Garbage collection 71 = 23+7+41 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 48 49 50 51 52 53 54 55 56 57 58 59
+Garbage collection 73 = 24+7+42 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 60 61 62 63 64 65 66 67 68 69 70 71
+Garbage collection 75 = 25+7+43 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 72 73 74 75 76 77 78 79 80 81 82 83
+Garbage collection 77 = 26+7+44 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 84 85 86 87 88 89 90 91 92 93 94 95
+Garbage collection 79 = 27+7+45 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1]  96  97  98  99 100 101 102 103 104 105 106 107
+Garbage collection 81 = 28+7+46 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 108 109 110 111 112 113 114 115 116 117 118 119
+Garbage collection 83 = 29+7+47 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 120 121 122 123 124 125 126 127 128 129 130 131
+Garbage collection 85 = 30+7+48 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 132 133 134 135 136 137 138 139 140 141 142 143
