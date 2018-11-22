@@ -1,0 +1,21 @@
+Changed directory to /home/zmx21/MRC_BSU_Internship/Plots.
+
+JobID: 6892787
+======
+Time: Thu Nov 22 16:29:03 GMT 2018
+Running on master node: cpu-k-12
+Current directory: /home/zmx21/MRC_BSU_Internship/Plots
+
+Nodes allocated:
+================
+cpu-k-12
+
+numtasks=16, numnodes=1, mpi_tasks_per_node=16 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+
+
+Loading required package: parallel
+Loading required package: future
+  |                                                                    |                                                            |   0%, ETA NA

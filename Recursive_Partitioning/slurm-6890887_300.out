@@ -92,3 +92,19 @@ Garbage collection 95 = 33+7+55 (level 2) ...
 71.6 Mbytes of cons cells used (51%)
 3759.6 Mbytes of vectors used (62%)
  [1] 4716 4717 4718 4719 4720 4721 4722 4723 4724 4725 4726 4727
+Garbage collection 97 = 34+7+56 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 4728 4729 4730 4731 4732 4733 4734 4735 4736 4737 4738 4739
+Garbage collection 98 = 34+7+57 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 4740 4741 4742 4743 4744 4745 4746 4747 4748 4749 4750 4751
+Garbage collection 99 = 34+7+58 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 4752 4753 4754 4755 4756 4757 4758 4759 4760 4761 4762 4763
+Garbage collection 101 = 35+7+59 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 4764 4765 4766 4767 4768 4769 4770 4771 4772 4773 4774 4775
