@@ -136,3 +136,8 @@ Garbage collection 137 = 62+9+66 (level 2) ...
 16807.0 Mbytes of vectors used (62%)
  [1] 1868 1869 1870 1871 1872 1873 1874 1875 1876 1877 1878 1879 1880 1881 1882
 [16] 1883
+Garbage collection 140 = 64+9+67 (level 2) ... 
+72.3 Mbytes of cons cells used (51%)
+16807.0 Mbytes of vectors used (62%)
+ [1] 1884 1885 1886 1887 1888 1889 1890 1891 1892 1893 1894 1895 1896 1897 1898
+[16] 1899

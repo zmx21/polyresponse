@@ -76,3 +76,7 @@ Garbage collection 91 = 33+7+51 (level 2) ...
 71.6 Mbytes of cons cells used (51%)
 3759.6 Mbytes of vectors used (62%)
  [1] 4668 4669 4670 4671 4672 4673 4674 4675 4676 4677 4678 4679
+Garbage collection 93 = 34+7+52 (level 2) ... 
+71.6 Mbytes of cons cells used (51%)
+3759.6 Mbytes of vectors used (62%)
+ [1] 4680 4681 4682 4683 4684 4685 4686 4687 4688 4689 4690 4691

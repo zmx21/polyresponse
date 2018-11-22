@@ -22,8 +22,12 @@ resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312
 args <- (commandArgs(T))
 node_size <- as.numeric(args[[1]])
 p_thresh <- args[[2]]
-n_cores <- as.numeric(args[[3]])
+chunks <- args[[3]]
+chunks <- unlist(strsplit(x = chunks,split = ':'))
+chunks <- chunks[1]:chunks[2]
+
+n_cores <- as.numeric(args[[4]])
 path <- paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/')
 
-permResult <- PredictBetaPerm(path,n_cores,1:5000)
-saveRDS(permResult,file = paste0(path,'prediction_betas_perm/','mean_beta.rds'))
+permResult <- PredictBetaPerm(path,n_cores,chunks)
+saveRDS(permResult,file = paste0(path,'prediction_betas_perm/','mean_beta_',range(chunks)[1],'_',range(chunks)[2],'.rds'))
