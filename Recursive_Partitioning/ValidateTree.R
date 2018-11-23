@@ -50,39 +50,39 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm){
     }
   }
 }
-# args=(commandArgs(TRUE))
-# node_size <- as.numeric(args[[1]])
-# n_cores <- as.numeric(args[[2]])
-# resultPath <- '~/bsu_scratch/Random_Forest_0p75/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
-# thresh <- c('1e-5','2e-5','3e-5','4e-5','6e-5')
-# for(i in 1:length(thresh)){
-#   RunBetaErr(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores,T)
-#   RunBetaErr(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores,F)
-# }
+args=(commandArgs(TRUE))
+node_size <- as.numeric(args[[1]])
+n_cores <- as.numeric(args[[2]])
+resultPath <- '~/bsu_scratch/Random_Forest_0p75/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+thresh <- c('1e-5','2e-5','3e-5','4e-5','6e-5')
+for(i in 1:length(thresh)){
+  RunBetaErr(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores,T)
+  RunBetaErr(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores,F)
+}
 
-data <- readRDS(paste0(resultPath,'data_p_','3e-05','.rds'))
-training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
-testing_set <- training_testing_set$outofbag
+# data <- readRDS(paste0(resultPath,'data_p_','3e-05','.rds'))
+# training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+# testing_set <- training_testing_set$outofbag
 
-test_tree_35000_result <- pbmclapply(1:5000,function(i){
-  test_tree <- readRDS(paste0(resultPath,'0.75_35000_3e-5/','tree',i,'.rds'))
-  CompareBeta(testing_set,test_tree$bootstrapPartyTree,F)
-},mc.cores = 30,ignore.interactive = T)
-saveRDS(test_tree_35000_result,file = 'bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/test_tree_35000.rds')
-test_tree_35000_train <- unlist(lapply(test_tree_35000_result,function(x) x$trainingMainEffects))
-test_tree_35000_test <- unlist(lapply(test_tree_35000_result,function(x) x$testingMainEffects))
-library(ggplot2)
-p1 <- ggplot(data.frame(training=test_tree_35000_train,testing=test_tree_35000_test), aes(x=training, y=testing)) + xlim(-1,1) + ylim(-1,1) +  geom_bin2d() + theme_bw() + labs(x='Training Set Treatment Effect',y='Testing Set Treatment Effect') + ggtitle('P<3e-5, MinNode=35000')
-
-
-test_tree_10000_result <- pbmclapply(1:5000,function(i){
-  test_tree <- readRDS(paste0(resultPath,'0.75_10000_3e-5/','tree',i,'.rds'))
-  CompareBeta(testing_set,test_tree$bootstrapPartyTree,F)
-},mc.cores = 30,ignore.interactive = T)
-saveRDS(test_tree_10000_result,file = 'bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/test_tree_10000.rds')
-test_tree_10000_train <- unlist(lapply(test_tree_10000_result,function(x) x$trainingMainEffects))
-test_tree_10000_test <- unlist(lapply(test_tree_10000_result,function(x) x$testingMainEffects))
-library(ggplot2)
-p2 <- ggplot(data.frame(training=test_tree_10000_train,testing=test_tree_10000_test), aes(x=training, y=testing)) + geom_bin2d() + theme_bw() + labs(x='Training Set Treatment Effect',y='Testing Set Treatment Effect') + ggtitle('P<3e-5, MinNode=10000')
-library(ggpubr)
-ggarrange(plotlist = list(p1,p2),ncol = 1,nrow = 2)
+# test_tree_35000_result <- pbmclapply(1:5000,function(i){
+#   test_tree <- readRDS(paste0(resultPath,'0.75_35000_3e-5/','tree',i,'.rds'))
+#   CompareBeta(testing_set,test_tree$bootstrapPartyTree,F)
+# },mc.cores = 30,ignore.interactive = T)
+# saveRDS(test_tree_35000_result,file = 'bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/test_tree_35000.rds')
+# test_tree_35000_train <- unlist(lapply(test_tree_35000_result,function(x) x$trainingMainEffects))
+# test_tree_35000_test <- unlist(lapply(test_tree_35000_result,function(x) x$testingMainEffects))
+# library(ggplot2)
+# p1 <- ggplot(data.frame(training=test_tree_35000_train,testing=test_tree_35000_test), aes(x=training, y=testing)) + xlim(-1,1) + ylim(-1,1) +  geom_bin2d() + theme_bw() + labs(x='Training Set Treatment Effect',y='Testing Set Treatment Effect') + ggtitle('P<3e-5, MinNode=35000')
+# 
+# 
+# test_tree_10000_result <- pbmclapply(1:5000,function(i){
+#   test_tree <- readRDS(paste0(resultPath,'0.75_10000_3e-5/','tree',i,'.rds'))
+#   CompareBeta(testing_set,test_tree$bootstrapPartyTree,F)
+# },mc.cores = 30,ignore.interactive = T)
+# saveRDS(test_tree_10000_result,file = 'bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/test_tree_10000.rds')
+# test_tree_10000_train <- unlist(lapply(test_tree_10000_result,function(x) x$trainingMainEffects))
+# test_tree_10000_test <- unlist(lapply(test_tree_10000_result,function(x) x$testingMainEffects))
+# library(ggplot2)
+# p2 <- ggplot(data.frame(training=test_tree_10000_train,testing=test_tree_10000_test), aes(x=training, y=testing)) + geom_bin2d() + theme_bw() + labs(x='Training Set Treatment Effect',y='Testing Set Treatment Effect') + ggtitle('P<3e-5, MinNode=10000')
+# library(ggpubr)
+# ggarrange(plotlist = list(p1,p2),ncol = 1,nrow = 2)

@@ -16,9 +16,9 @@ GenerateTestingPrediction <- function(tree,genotypeMatrix,testingSetSamples){
     currentIndicator <- nodeAssignment == uniqueLeafNodes[i]
     testingMainEffects[i] <- FitMainEffectModel(testingSetSamples$dosageTarget[currentIndicator],testingSetSamples$phenotypes[currentIndicator],testingSetSamples$covariates[currentIndicator,])$coeff['treatment']
   }
-  results <- testingMainEffects[as.character(nodeAssignment)]
-  names(results) <- NULL
-  return(results)
+  mainEffectPred <- testingMainEffects[as.character(nodeAssignment)]
+  names(mainEffectPred) <- NULL
+  return(list(mainEffectPred=mainEffectPred,testingMainEffects=testingMainEffects))
 }
 
 
@@ -33,7 +33,7 @@ PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_c
   #For each tree, predict using the permuted matrix 
   tree_chunks <- unlist(strsplit(tree_chunks,':'))
   tree_chunks <- tree_chunks[1]:tree_chunks[2]
-  
+
   #Initialize summation matrix
   sumBeta <- lapply(1:length(permGenotypeMatrix),function(x) rep(0,nrow(testingSetSamples$dosageMatrix)))
   #Loop through all trees
@@ -42,12 +42,18 @@ PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_c
       setTxtProgressBar(pb,i/length(tree_chunks))
       #Load trees
       treeObj <- readRDS(treePaths[tree_chunks[i]])
-      tree <- treeObj$bootstrapPartyTree
       #Predict treatment effects across bootstrap samples
-      permResults <- mclapply(1:length(permGenotypeMatrix),function(i){
-        GenerateTestingPrediction(tree,permGenotypeMatrix[[i]],testingSetSamples)
-      },mc.cores = n_cores-1)
-      sumBeta <- mapply("+",sumBeta,permResults,SIMPLIFY = F)
+      permResults <- list()
+      chunks <- splitIndices(length(permGenotypeMatrix),10)
+      for(j in 1:length(chunks)){
+        permResults <- c(permResults,mclapply(chunks[[j]],function(i){
+          GenerateTestingPrediction(treeObj$bootstrapPartyTree,permGenotypeMatrix[[i]],testingSetSamples)
+        },mc.cores =  n_cores))
+      }
+      sumBeta <- mapply("+",sumBeta,lapply(permResults,function(x) x$mainEffectPred),SIMPLIFY = F)
+      testingMainEffects <- lapply(permResults,function(x) x$testingMainEffects)
+      saveRDS(testingMainEffects,file=paste0(randomForestPath,'/prediction_betas_perm/','testing_main_effects_tree',i,'.rds'))
+      remove(permResults);gc(verbose = F);
   }
   close(pb)
   sumBeta <- do.call(rbind,sumBeta)
