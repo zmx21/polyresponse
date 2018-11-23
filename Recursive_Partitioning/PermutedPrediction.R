@@ -3,6 +3,7 @@ source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 
 library(partykit)
 library(parallel)
+library(pbmcapply)
 #Generate training and testing set prediction, given a genotype matrix
 GenerateTestingPrediction <- function(tree,genotypeMatrix,testingSetSamples){
   nodeAssignment <- predict(tree,genotypeMatrix)
@@ -15,7 +16,8 @@ GenerateTestingPrediction <- function(tree,genotypeMatrix,testingSetSamples){
     currentIndicator <- nodeAssignment == uniqueLeafNodes[i]
     testingMainEffects[i] <- FitMainEffectModel(testingSetSamples$dosageTarget[currentIndicator],testingSetSamples$phenotypes[currentIndicator],testingSetSamples$covariates[currentIndicator,])$coeff['treatment']
   }
-  results <- list(nodeAssignment = nodeAssignment,testingMainEffects = testingMainEffects)
+  results <- testingMainEffects[as.character(nodeAssignment)]
+  names(results) <- NULL
   return(results)
 }
 
@@ -31,28 +33,25 @@ PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_c
   #For each tree, predict using the permuted matrix 
   tree_chunks <- unlist(strsplit(tree_chunks,':'))
   tree_chunks <- tree_chunks[1]:tree_chunks[2]
-  tree_chunks <- split(tree_chunks,seq(length(tree_chunks)-1)%/%n_cores)
   
-  #Seperate into chunks of number of cores (reduce memory usage)
+  #Initialize summation matrix
+  sumBeta <- lapply(1:length(permGenotypeMatrix),function(x) rep(0,nrow(testingSetSamples$dosageMatrix)))
+  #Loop through all trees
+  pb <- progressBar()
   for(i in 1:(length(tree_chunks))){
-    currentTreeChunk <- tree_chunks[[i]]
-    print(currentTreeChunk)
-    
-    trash <- mclapply(currentTreeChunk,function(k){
-      # k <- 1
-      treeObj <- readRDS(treePaths[k])
+      setTxtProgressBar(pb,i/length(tree_chunks))
+      #Load trees
+      treeObj <- readRDS(treePaths[tree_chunks[i]])
       tree <- treeObj$bootstrapPartyTree
-      permResults <- lapply(permGenotypeMatrix,function(x) GenerateTestingPrediction(tree,x,testingSetSamples))
-      rm(treeObj);gc(verbose = F);
-      curTreeResults <- lapply(c('nodeAssignment','testingMainEffects'),function(i) do.call(rbind,lapply(permResults,function(x) x[[i]])))
-      rm(permResults);gc(verbose = F);
-      names(curTreeResults) <- c('nodeAssignment','testingMainEffects')
-      saveRDS(curTreeResults,paste0(randomForestPath,'/prediction_betas_perm/','tree',k,'.rds'))
-      rm(curTreeResults); gc(verbose = F);
-      return(NA)
-    },mc.preschedule = F,mc.cores = n_cores)
-    remove(trash);gc(verbose = T);
+      #Predict treatment effects across bootstrap samples
+      permResults <- mclapply(1:length(permGenotypeMatrix),function(i){
+        GenerateTestingPrediction(tree,permGenotypeMatrix[[i]],testingSetSamples)
+      },mc.cores = n_cores-1)
+      sumBeta <- mapply("+",sumBeta,permResults,SIMPLIFY = F)
   }
+  close(pb)
+  sumBeta <- do.call(rbind,sumBeta)
+  saveRDS(sumBeta,file = paste0(randomForestPath,'/prediction_betas_perm/','sum_beta_',range(tree_chunks)[1],'_',range(tree_chunks)[2],'.rds'))
 }
 RunPermutedPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_chunks){
   #Load training set samples
@@ -71,10 +70,10 @@ node_size <- as.numeric(args[[1]])
 thresh <- args[[2]]
 n_cores <- as.numeric(args[[3]])
 tree_chunks <- args[[4]]
-# node_size <- 10000
+# node_size <- 30000
 # thresh <- '3e-5'
 # n_cores <- 16
-# tree_chunks <- '1:33'
+# tree_chunks <- '1:5000'
 print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks))
 resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
 RunPermutedPrediction(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores,tree_chunks)

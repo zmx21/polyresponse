@@ -5,9 +5,9 @@ PredictBetaPerm <- function(path,n_cores,chunks){
   
   sampleNodeAssignment <- readRDS(paste0(path,'prediction_betas_perm/',allTrees[1]))$nodeAssignment
   sumBetas <- matrix(0,nrow = nrow(sampleNodeAssignment),ncol = ncol(sampleNodeAssignment))
-  pb <- progressBar()
+  pb <- progressBar(min = min(chunks),max = max(chunks))
   for(i in chunks){
-    setTxtProgressBar(pb,i/length(chunks))
+    setTxtProgressBar(pb,i)
     curTree <- readRDS(paste0(path,'prediction_betas_perm/',allTrees[i]))
     curBeta <- mclapply(1:nrow(sumBetas),function(i){
       curTree$testingMainEffect[i,as.character(curTree$nodeAssignment[i,])]
@@ -23,8 +23,11 @@ args <- (commandArgs(T))
 node_size <- as.numeric(args[[1]])
 p_thresh <- args[[2]]
 chunks <- args[[3]]
+print(c('chunks'=chunks,'p_thresh'=p_thresh,'node_size'=node_size))
+
 chunks <- unlist(strsplit(x = chunks,split = ':'))
 chunks <- chunks[1]:chunks[2]
+
 
 n_cores <- as.numeric(args[[4]])
 path <- paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/')
