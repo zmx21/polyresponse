@@ -1,3 +1,9 @@
+####################################################################################
+#Creates random forest, dependent on the implementation of decision tree in InteractionTree.R
+#Input: As listed in message below (line 70)
+#Output: .rds file for each tree.
+####################################################################################
+
 source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/LoadDosage.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
@@ -16,8 +22,8 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
   }else{
     chunks <- 1:as.numeric(n_bootstrap)
   }
-  trash <- pbmclapply(chunks,function(i) {
-    #create list of boostrap samples to construct tree on
+  res <- pbmclapply(chunks,function(i) {
+    #create list of boostrap samples (sample with replacement) to construct current tree on
     bootstrapIndex <- samples[sample(1:length(samples),size = sample_size,replace = T)]
     outofbagIndex <- setdiff(samples,bootstrapIndex)
     
@@ -25,6 +31,7 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     currentSubsample <- ExtractSubSample(data,bootstrapIndex,outofbagIndex)
     currentBootstrap <- currentSubsample$bootstrap
     currentOutOfBag <- currentSubsample$outofbag
+    #Check how many features to choose randomly (if expressed as number,fraction, or default)
     if(suppressWarnings(is.na(as.numeric(n_features)))){
       n_features <- floor(eval(parse(text = paste0(n_features,'(',dim(currentBootstrap$dosageMatrix)[2],')'))))
     }else if(as.numeric(n_features) <= 1){
@@ -32,10 +39,11 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     }else{
       n_features <- as.numeric(n_features)
     }
-    #Construct decision tree 
+    #Construct current decision tree
     bootstrapTree <- ConstructTree(currentBootstrap,tree_min_size,n_features)
     bootstrapPartyTree <- party(bootstrapTree,as.data.frame(currentBootstrap$dosageMatrix))
     bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,bootstrapIndex=bootstrapIndex,outofbagIndex=outofbagIndex)
+    #Save tree, and bootstrap indices
     saveRDS(bootstrapTreeObj,paste0(outpath,'tree',i,'.rds'))
   },mc.cores = n_cores,ignore.interactive = T)
 }
@@ -95,12 +103,15 @@ if(length(args)==0){
   system(paste0('mkdir -p ',outpath,suffix,'/'))
   
 }
+#Check if data has been loaded already, and already saved
 if(paste0('data_p_',as.numeric(p_val_thresh),'.rds') %in% dir(outpath)){
   data <- readRDS(paste0(outpath,'data_p_',as.numeric(p_val_thresh),'.rds'))
 }else{
   data <- LoadDosage(as.numeric(p_val_thresh),interaction_path,phenotype,0.3,0.05,0.5,targetRS)
   saveRDS(data,file = paste0(outpath,'data_p_',as.numeric(p_val_thresh),'.rds'))
 }
+#Extract training set.
 training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
+#Create random forest
 CreateRandomForest(training_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/'),as.numeric(n_cores))

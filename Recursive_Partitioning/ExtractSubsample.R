@@ -1,3 +1,9 @@
+####################################################################################
+#Helper function which extracts bootstrapped samples and out of bag samples based on provided indices
+#Input: unseperated data, and indices.
+#Output: a list of 2 data frames, each containing boostrap samples and out of bag samples respectively. 
+####################################################################################
+
 ExtractSubSample <- function(data,boostrap_index,outofbag_index){
   bootstrap <- data
   outofbag <- data

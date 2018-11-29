@@ -1,3 +1,4 @@
+#Plot comparison of root squared error between true testing set and permuted testing set
 CalcPredErrorDiff <- function(path){
   print(path)
   nonPermError <- readRDS(paste0(path,'beta_err.rds'))

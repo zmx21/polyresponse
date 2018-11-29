@@ -1,6 +1,15 @@
+####################################################################################
+#Create a single interaction tree. Based on implementation of Su et al 2009
+#(http://www.jmlr.org/papers/volume10/su09a/su09a.pdf)
+#
+#Input: a dataframe (with dosage matrix of target and set of mediating SNPs, covariates, and phenotype)
+#       min node size of tree, and n_features to choose randomly at each split
+#Output: partykit object representation of the interaction tree
+####################################################################################
+
 library(RcppEigen)
 library(partykit)
-#Calculate interaction according to specified indeicator vector
+#Calculate interaction according to specified indicator vector
 CalculateInteraction <- function(dosageTargetVector,splitIndicator,phenotypes,covariates){
   #fit linear model to test significance of split-treatment interactions.
   mdlMat <- cbind('Intercept' = rep(1,length(dosageTargetVector)),'treatment' = as.vector(dosageTargetVector),'split' = splitIndicator,'int' = as.vector(dosageTargetVector) * splitIndicator,as.matrix(covariates))
@@ -33,17 +42,22 @@ FindOptimalSplit <- function(dosageTarget,dosageMatrix,phenotypes,covariates,n_f
     stop('number of features exceed availiable features')
   }
   dosageMatrix <- dosageMatrix[,randomFeatures]
+  #Loop through all predictors (mediating SNPs)
   for(i in 1:ncol(dosageMatrix)){
     uniqueValues <- unique(dosageMatrix[,i])
     allowableSplits <- splits[sapply(splits,function(x) x %in% uniqueValues)]
+    #if split not allowed or no difference in genotype, continue to next option
     if(length(uniqueValues) == 1 | length(allowableSplits) == 0){
       next
     }
+    #Find optimal out of allowable splits
     for(j in 1:length(allowableSplits)){
       splitInfo <- CalculateSplitInteraction(dosageTarget,dosageMatrix[,i],phenotypes,covariates,allowableSplits[[j]])
+      #If the split would be too small, or no interaction, skip current choice
       if(is.na(splitInfo$G_s) | any(table(splitInfo$splitIndicator) < min_size)){
         next
       }
+      #If better than best split so far, store current split
       comparison <- splitInfo$G_s > bestSplitInfo$G_s
       if(comparison){
         bestSplitInfo$G_s <- splitInfo$G_s
@@ -67,7 +81,7 @@ ConstructLeafNode <- function(dosageTarget,phenotypes,covariates,nodeID){
   return(node)
 }
 
-#Extract subset of data
+#Helper function to extract subset of data
 SubsetData <- function(data,subset){
   if(is.null(nrow(data))){
     data[subset]
@@ -77,7 +91,8 @@ SubsetData <- function(data,subset){
     data[subset,]
   }
 }
-#Construct Tree
+
+#Recursive function which builds the decision tree
 Split <- function(node,data,minSize,n_features){
   #Seperate data into subgroups for right node and left node
   if(node$split == 0){
@@ -95,6 +110,7 @@ Split <- function(node,data,minSize,n_features){
   #Process Left node
   nodeIndex <<- nodeIndex + 1
   if(length(leftData$dosageTarget) < minSize){
+    #Create terminal node if the node size is less than the minimum allowable size
     leftNode <- ConstructLeafNode(leftData$dosageTarget,leftData$phenotypes,leftData$covariates,nodeIndex)
   }else{
     leftBestSplit <- FindOptimalSplit(leftData$dosageTarget,leftData$dosageMatrix,leftData$phenotypes,leftData$covariates,n_features,minSize)
@@ -102,18 +118,21 @@ Split <- function(node,data,minSize,n_features){
     if(is.na(leftBestSplit$rs)){
       leftNode <- ConstructLeafNode(leftData$dosageTarget,leftData$phenotypes,leftData$covariates,nodeIndex)
     }else{
+      #Store best split
       leftSplitRSIndex <- which(colnames(leftData$dosageMatrix) == leftBestSplit$rs)
+      #Create split object using partykits package
       leftSplitObj <- partysplit(leftSplitRSIndex,
                                  breaks = ifelse(leftBestSplit$split==0,0,2),
                                  right = ifelse(leftBestSplit$split==0,T,F))
+      #Recurisvely call split on the left daugther node
       leftNode <- partynode(nodeIndex,split=leftSplitObj,kids = Split(leftBestSplit,leftData,minSize,n_features),info=leftBestSplit$rs)
     }
   }
 
-  
   #Process Right node
   nodeIndex <<- nodeIndex + 1
   if(length(rightData$dosageTarget) < minSize){
+    #Create terminal node if the node size is less than the minimum allowable size
     rightNode <- ConstructLeafNode(rightData$dosageTarget,rightData$phenotypes,rightData$covariates,nodeIndex)
   }else{
     rightBestSplit <- FindOptimalSplit(rightData$dosageTarget,rightData$dosageMatrix,rightData$phenotypes,rightData$covariates,n_features,minSize)
@@ -121,25 +140,39 @@ Split <- function(node,data,minSize,n_features){
     if(is.na(rightBestSplit$rs)){
       rightNode <- ConstructLeafNode(rightData$dosageTarget,rightData$phenotypes,rightData$covariates,nodeIndex)
     }else{
+      #Store best split
       rightSplitRSIndex <- which(colnames(rightData$dosageMatrix) == rightBestSplit$rs)
+      #Create split object using partykits package
       rightSplitObj <- partysplit(rightSplitRSIndex,
                                   breaks = ifelse(rightBestSplit$split==0,0,2),
                                   right = ifelse(rightBestSplit$split==0,T,F))
+      #Recurisvely call split on the left daugther node
       rightNode <- partynode(nodeIndex,split=rightSplitObj,kids = Split(rightBestSplit,rightData,minSize,n_features),info=rightBestSplit$rs)
     }
   }
   return(list(leftNode,rightNode))
 }
+
+#MAIN FUNCTION. Build root and constructs entire tree.
 ConstructTree <- function(data,minSize,n_features){
+  #Create root node
   rootBestSplit <- FindOptimalSplit(data$dosageTarget,data$dosageMatrix,data$phenotypes,data$covariates,n_features,minSize)
+  #Create split object using partkits package
   splitObj <- partysplit(which(colnames(data$dosageMatrix) == rootBestSplit$rs),
                          breaks = ifelse(rootBestSplit$split==0,0,2),
                          right = ifelse(rootBestSplit$split==0,T,F))
   #Keep track of index used in nodes
   nodeIndex <<- 1L
+  #Call recurive split function on daughter nodes, to construct tree
   nodeObj <- partynode(nodeIndex,split=splitObj,kids = Split(rootBestSplit,data,minSize,n_features),info=rootBestSplit$rs)
+  #return tree objects (partykits package)
   return(nodeObj)
 }
+
+####################################################################################
+#Functions which extract stats from existing trees
+####################################################################################
+
 #Predict beta coefficient of target SNP/Gene, given a genotype vector of a sample, based on the constructed tree
 PredictBeta <- function(genotype,tree){
   leafNodeId <- predict(tree,genotype)
@@ -147,6 +180,7 @@ PredictBeta <- function(genotype,tree){
   beta <- as.numeric(unlist(strsplit(x = unlist(info),split = "  "))[1])
   return(beta)
 }
+
 #Calculate interaction of each split, by sending a sample genotype data down the tree.
 CalculateTotalInteraction <- function(genotypeData,tree,dosageTargetVector,phenotypes,covariates){
   terminalNodes <- nodeids(tree,terminal = T)
@@ -176,8 +210,3 @@ CalculateTotalInteraction <- function(genotypeData,tree,dosageTargetVector,pheno
   names(G_s) <- as.character(unlist(nodeapply(tree,ids=internalNodes,FUN = function(n) n$info)))
   return(G_s)
 }
-
-# pn <- ConstructTree(test,50000,5)
-# py <- party(pn,as.data.frame(test$dosageMatrix))
-# plot(py)
-# int <- CalculateTotalInteraction(as.data.frame(test$dosageMatrix),py,test$dosageTarget,test$phenotypes,test$covariates)

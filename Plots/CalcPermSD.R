@@ -1,3 +1,4 @@
+#standard deviation of permuted treatment effects. saved and used by other plotting functions. 
 library(pbmcapply)
 CalcSDPerm <- function(path){
   print(path)

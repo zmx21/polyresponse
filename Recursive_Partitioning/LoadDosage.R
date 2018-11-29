@@ -1,3 +1,10 @@
+####################################################################################
+#Loads genotype dosage of specified SNPs, in the format which would be used to build RF
+#Input: P-value threshold and path to where interactions results are already stored
+#MAF, Info, and r2 threshold should also be provided. 
+#Output: dataframe containing genotype of target and mediating SNPs, phenotype, and covariates
+####################################################################################
+
 library(dplyr)
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
@@ -52,7 +59,6 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
     }
     dosageTarget <- as.vector(abs(beta_coeff) %*% dosageTarget)
   }
-  
   
   #Generate independent set of predictors
   uniqueChr <- unique(interaction_results$chromosome)

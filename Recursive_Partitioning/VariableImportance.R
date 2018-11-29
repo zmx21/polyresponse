@@ -1,3 +1,10 @@
+####################################################################################
+#Appens variable improtance measures to each tree in RF (already constructed)
+#Input: Line 39
+#Output: saved .rds file of trees, with the same name but with variable importance info appended.
+####################################################################################
+
+
 source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
 library(pbmcapply)

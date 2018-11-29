@@ -1,4 +1,8 @@
-#Function which calculates significance of interaction between two SNPs.
+####################################################################################
+#Helper functional called by GxG_Interactions.R
+####################################################################################
+
+#Calculates significance of interaction between two SNPs, including covariates in the model.
 CalcInteractions <- function(dosageSubMatrix,dosageTarget,phenotypes,covariates){
   #Create model matrix, with main and interaction effects of two SNPs. 
   mdlMat <- cbind('Intercept' = rep(1,length(dosageSubMatrix)),'snp' = dosageSubMatrix,'target' = dosageTarget,'int' = dosageSubMatrix * dosageTarget,covariates)

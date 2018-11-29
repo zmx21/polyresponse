@@ -1,3 +1,4 @@
+#mean treatment effects (across all trees in RF). Results saved and used by other plotting functions. 
 library(pbmcapply)
 CalcMean <- function(path){
   print(path)

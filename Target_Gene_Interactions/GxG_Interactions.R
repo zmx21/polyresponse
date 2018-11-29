@@ -1,20 +1,30 @@
+####################################################################################
+#Main function to run genomewide GxG interactions.
+#Input: As listed in  message below (line 152)
+#Output: Text file with GxG interaction information, written to a text file in specified path
+####################################################################################
+
 library(RcppEigen)
+library(dplyr)
+library(parallel)
+library(data.table)
+library(pbmcapply)
+
 source('~/MRC_BSU_Internship/Target_Gene_Interactions/CalcInteractions.R')
+source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
+source('~/MRC_BSU_Internship/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+
+#Main function, which calculates GxG interactions with target SNP, in chunks.
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks,training_set){
   chunkSize=50
   
-  library(dplyr)
-  library(parallel)
-  library(data.table)
-  library(pbmcapply)
-  source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-  source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
-  source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
   #Find all rsids, and generate chunks to read.
   print('Loading rsID')
   allRSIds <- FindAllRSIds(chr,as.numeric(MAF),as.numeric(Info)) %>% dplyr::filter(!rsid%in%targetRS)
   allRSIds <- unique(allRSIds$rsid)
   rsIDChunks <- split(allRSIds,seq(length(allRSIds)-1)%/%chunkSize)
+  
   #Load phenotype information of samples
   print('Loading Phenotypes')
   #Decide what columns to load based on what covariates were specificed
@@ -39,7 +49,9 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   targetRS <- unlist(strsplit(targetRS,split = ','))
   dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
 
+  #Calculate gene score if more than 1 target SNP listed, otherwise load single SNP dosage vector.
   if(length(targetRS) < 2){
+    #Load single SNP dosage vector
     dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
     #keep samples without missing information
     dosageTarget <- dosageTarget[,samplesToKeep]
@@ -48,7 +60,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     dosageTarget <- dosageTarget[trainingSet]
     
   }else{
-    #Get marginal effects of rsid
+    #Get dosage vectors of all SNPs
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
     #keep samples without missing information
     dosageVector <- dosageVector[,samplesToKeep]
@@ -56,8 +68,8 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     trainingSet <- readRDS(file = training_set)
     dosageVector <- dosageVector[,trainingSet]
     
-    
-    beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
+    #Calculate main effects of each individual SNP
+    beta_coeff <- CalcSnpPhenoAssociation(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
     #Flip alleles such that all are bp lowering
     dosageTarget <- dosageVector
     for(i in 1:nrow(dosageTarget)){

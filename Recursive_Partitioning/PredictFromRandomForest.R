@@ -1,3 +1,13 @@
+####################################################################################
+#Apply RF to testing set, and save predicted treatment effects.
+#Input: p_value treshold (of predictors to include), and minimum node size of tree.
+#Output: .rds files containing predicted treatment effect of each leaf node
+####################################################################################
+
+library(pbmcapply)
+library(partykit)
+
+
 source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 #Generate training and testing set prediction, given a genotype matrix
@@ -20,8 +30,7 @@ GeneratePrediction <- function(tree,genotypeMatrix,testingSetSamples){
   return(results)
 }
 
-library(pbmcapply)
-library(partykit)
+#Runs predictions of testing set samples
 PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
   system(paste0('mkdir -p ',randomForestPath,'/prediction_betas/'))
   #find all individual trees in random forest
@@ -38,6 +47,8 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
     saveRDS(GeneratePrediction(tree,genotypeMatrix,testingSetSamples),paste0(randomForestPath,'prediction_betas/','tree',k,'.rds'))
   },mc.cores = n_cores,ignore.interactive = T)
 }
+
+#MAIN FUNCTION
 RunPredictionFromRF <- function(resultPath,suffix,p_thresh,n_cores){
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
   training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
@@ -55,15 +66,3 @@ n_cores <- as.numeric(args[[3]])
 print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))
 resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
 RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores)
-
-# resultPath <- '~/bsu_scratch/Random_Forest/rs1262894_sbp/'
-# thresh <- c('1e-5','2e-5','3e-5','4e-5','6e-6','8e-6')
-# for(i in 1:length(thresh)){
-#   RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores)
-# }
-# 
-# resultPath <- '~/bsu_scratch/Random_Forest/rs4968783_sbp/'
-# thresh <- c('1e-5','2e-5','3e-5','4e-5','6e-6','8e-6')
-# for(i in 1:length(thresh)){
-#   RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh[i],'/'),as.numeric(thresh[i]),n_cores)
-# }

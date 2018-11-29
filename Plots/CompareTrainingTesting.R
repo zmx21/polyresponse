@@ -1,3 +1,4 @@
+#Plot comparison of training set and testing set treatment effects (root squared error)
 CalcTrainTestingDiff <- function(path){
   betaErr <- readRDS(paste0(path,'beta_err.rds'))
   return(do.call(c,betaErr))

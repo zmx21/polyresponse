@@ -1,3 +1,10 @@
+####################################################################################
+#Generate a list of permuted genotype matrix (for use as predictor in RF). 
+# permuted dosgage of each SNP indepently, across samples. This maintains MAF of each SNP.
+#Input: p_value treshold, stored unpermuted data, and number of permutations.
+#Output: .rds file containing the list of genotype matrices.
+####################################################################################
+
 source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
 #Permuted dosgage of each SNP, across samples
 GeneratePermutation <- function(genotypeMatrix){
@@ -6,6 +13,7 @@ GeneratePermutation <- function(genotypeMatrix){
 
 #Generate permuted genotype matrix
 GeneratePermutatedGenoMatrix <- function(resultPath,suffix,p_thresh,n_perm){
+  #Read in unpermuted data, and extract testing set
   data <- readRDS(file = paste0(resultPath,'data_p_',p_thresh,'.rds'))
   training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
   testingSetSamples <- training_testing_set$outofbag
@@ -17,7 +25,7 @@ GeneratePermutatedGenoMatrix <- function(resultPath,suffix,p_thresh,n_perm){
   names(testingSetSamples$phenotypes) <- NULL
   rownames(testingSetSamples$covariates) <- NULL
   
-  #Generate permuted genotype matrix
+  #Generate permuted genotype matrix, 
   permGenotypeMatrix <- lapply(1:n_perm,function(x) GeneratePermutation(genotypeMatrix))
   saveRDS(permGenotypeMatrix,file = paste0(paste0(resultPath,'perm_genotype_p_',p_thresh,'.rds')))
 }

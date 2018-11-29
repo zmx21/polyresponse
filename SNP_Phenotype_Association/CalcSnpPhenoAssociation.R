@@ -19,7 +19,7 @@ LinearFit <- function(dosageSubMatrix,phenotypes,covariates){
   return(list(results = results,fit=summary(fit)))
 }
 
-CalcMarginalEffect <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,PC,med,n_cores,verbose=F){
+CalcSnpPhenoAssociation <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,PC,med,n_cores,verbose=F){
   #Decide what columns to load based on what covariates were specificed
   if(cov!=''){
     cov_names <- unlist(strsplit(x=cov,split = ','))
@@ -66,22 +66,3 @@ CalcMarginalEffect <- function(path,sample_file_prefix,bgen_file_prefix,phenotyp
     return(results)
   }
 }
-
-# path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-# sample_file_prefix <- 'ukbb_metadata_with_PC'
-# bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-# phenotype <- 'sbp'
-# 
-# with_cov <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',1,'sex,ages,bmi',1)
-# no_cov <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',1,'',1)
-
-# no_PC_nomed <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',eur_only = 1,cov='ages,sex,bmi',PC = 0,med = 0,n_cores = 1,verbose = T)
-# no_PC_med <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',eur_only = 1,cov='ages,sex,bmi',PC = 0,med = 1,n_cores = 1,verbose = T)
-# 
-# 
-# one_PC_med <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',eur_only = 1,cov='ages,sex,bmi',PC = 1,med = 1,n_cores = 1,verbose = T)
-# five_PC_med <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,'rs1262894',eur_only = 1,cov='ages,sex,bmi',PC = 5,med = 1,n_cores = 1,verbose = T)
-# 
-# drug_targets <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,c('rs4308','rs743757','rs143112823','rs2579519','rs7236548','rs66997589'),eur_only = 1,cov='ages,sex,bmi',PC = 5,med = 1,n_cores = 6,verbose = F)
-
-

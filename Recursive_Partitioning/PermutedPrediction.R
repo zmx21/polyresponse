@@ -1,3 +1,8 @@
+####################################################################################
+#Apply RF to a list of permuted genotype matrices (should be saved already by GeneratePermutedGenoMatrix.R)
+#Input: p_value treshold (of predictors to include), and minimum node size of tree.
+#Output: .rds files containing predicted treatment effect of each leaf node
+####################################################################################
 source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
 source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
 
@@ -21,7 +26,7 @@ GenerateTestingPrediction <- function(tree,genotypeMatrix,testingSetSamples){
   return(list(mainEffectPred=mainEffectPred,testingMainEffects=testingMainEffects))
 }
 
-
+#Runs predictions of permuted samples in chunks
 PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_chunks,permGenotypeMatrix){
   system(paste0('mkdir -p ',randomForestPath,'/prediction_betas_perm/'))
   
@@ -63,6 +68,8 @@ PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_c
   sumBeta <- do.call(rbind,sumBeta)
   saveRDS(sumBeta,file = paste0(randomForestPath,'/prediction_betas_perm/','sum_beta_',range(tree_chunks)[1],'_',range(tree_chunks)[2],'.rds'))
 }
+
+#MAIN FUNCTION
 RunPermutedPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_chunks){
   #Load training set samples
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
