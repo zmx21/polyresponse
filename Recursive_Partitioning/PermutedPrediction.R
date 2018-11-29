@@ -44,15 +44,19 @@ PermutedPrediction <- function(testingSetSamples,randomForestPath,n_cores,tree_c
       treeObj <- readRDS(treePaths[tree_chunks[i]])
       #Predict treatment effects across bootstrap samples
       permResults <- list()
-      chunks <- splitIndices(length(permGenotypeMatrix),10)
+      if(n_cores==16){
+        chunks <- splitIndices(length(permGenotypeMatrix),10)
+      }else{
+        chunks <- splitIndices(length(permGenotypeMatrix),50)
+      }
       for(j in 1:length(chunks)){
-        permResults <- c(permResults,mclapply(chunks[[j]],function(i){
-          GenerateTestingPrediction(treeObj$bootstrapPartyTree,permGenotypeMatrix[[i]],testingSetSamples)
+        permResults <- c(permResults,mclapply(chunks[[j]],function(k){
+          GenerateTestingPrediction(treeObj$bootstrapPartyTree,permGenotypeMatrix[[k]],testingSetSamples)
         },mc.cores =  n_cores))
       }
       sumBeta <- mapply("+",sumBeta,lapply(permResults,function(x) x$mainEffectPred),SIMPLIFY = F)
       testingMainEffects <- lapply(permResults,function(x) x$testingMainEffects)
-      saveRDS(testingMainEffects,file=paste0(randomForestPath,'/prediction_betas_perm/','testing_main_effects_tree',i,'.rds'))
+      saveRDS(testingMainEffects,file=paste0(randomForestPath,'/prediction_betas_perm/','testing_main_effects_tree',tree_chunks[i],'.rds'))
       remove(permResults);gc(verbose = F);
   }
   close(pb)
@@ -71,15 +75,15 @@ RunPermutedPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_chunks
   PermutedPrediction(testing_set,paste0(resultPath,suffix),n_cores,tree_chunks,permGenotypeMatrix)
 }
 
-args=(commandArgs(TRUE))
-node_size <- as.numeric(args[[1]])
-thresh <- args[[2]]
-n_cores <- as.numeric(args[[3]])
-tree_chunks <- args[[4]]
-# node_size <- 30000
-# thresh <- '3e-5'
-# n_cores <- 16
-# tree_chunks <- '1:5000'
+# args=(commandArgs(TRUE))
+# node_size <- as.numeric(args[[1]])
+# thresh <- args[[2]]
+# n_cores <- as.numeric(args[[3]])
+# tree_chunks <- args[[4]]
+node_size <- 10000
+thresh <- '1e-5'
+n_cores <- 16
+tree_chunks <- '2:2'
 print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks))
 resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
 RunPermutedPrediction(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores,tree_chunks)

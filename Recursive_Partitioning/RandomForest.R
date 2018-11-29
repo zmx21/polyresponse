@@ -17,7 +17,6 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     chunks <- 1:as.numeric(n_bootstrap)
   }
   trash <- pbmclapply(chunks,function(i) {
-    # i <- 1
     #create list of boostrap samples to construct tree on
     bootstrapIndex <- samples[sample(1:length(samples),size = sample_size,replace = T)]
     outofbagIndex <- setdiff(samples,bootstrapIndex)
@@ -36,11 +35,6 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
     #Construct decision tree 
     bootstrapTree <- ConstructTree(currentBootstrap,tree_min_size,n_features)
     bootstrapPartyTree <- party(bootstrapTree,as.data.frame(currentBootstrap$dosageMatrix))
-    # #Calculate Variable Importance
-    # variableImportance <- VariableImportance(bootstrapPartyTree,currentOutOfBag)
-    # 
-    # #Store current bootstrapTree
-    # bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,variableImportance=variableImportance,bootstrapIndex=bootstrapIndex,outofbagIndex=outofbagIndex)
     bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,bootstrapIndex=bootstrapIndex,outofbagIndex=outofbagIndex)
     saveRDS(bootstrapTreeObj,paste0(outpath,'tree',i,'.rds'))
   },mc.cores = n_cores,ignore.interactive = T)
@@ -49,14 +43,14 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  interaction_path <- '~/parsed_interaction/ACE_sbp.txt'
-  p_val_thresh <-  '6e-6'
-  targetRS <-  'rs4968783'
+  interaction_path <- '~/parsed_interaction/CACNA1D_sbp.txt'
+  p_val_thresh <-  '1e-5'
+  targetRS <-  'rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856'
   phenotype <- 'sbp'
   outpath <- '~/bsu_scratch/Random_Forest/'
-  n_bootstrap <- '1:2'
+  n_bootstrap <- '1:500'
   n_features <- '0.75'
-  min_node_size <- 35000
+  min_node_size <- 40000
   n_cores <- 16
   targetRS <- unlist(strsplit(targetRS,split = ','))
   outpath <- paste0(outpath,paste(targetRS,collapse = '_'),'_',phenotype,'/')

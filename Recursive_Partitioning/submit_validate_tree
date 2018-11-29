@@ -123,6 +123,4 @@ fi
 echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)"
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
-min_node=$(($SLURM_ARRAY_TASK_ID * 100))
-n_cores=16
-Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/ValidateTree.R' $min_node $n_cores
+Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/ValidateTree.R'

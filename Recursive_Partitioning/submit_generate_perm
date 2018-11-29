@@ -12,7 +12,7 @@
 #! Name of the job:
 
 #! Which project should be charged:
-#SBATCH -A MRC-BSU-SL2-GPU
+#SBATCH -A MRC-BSU-SL2-CPU
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
@@ -27,8 +27,8 @@
 ##SBATCH --no-requeue
 
 #! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
-#SBATCH -p bsu-gpu
-#SBATCH --mem=28G
+#SBATCH -p bsu-cpu
+SBATCH --mem=60G
 #! sbatch directives end here (put any additional directives above this line)
 
 #! Notes:
