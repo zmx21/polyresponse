@@ -1,5 +1,5 @@
 ## Identifying genetic predictors which underlie the heterogeneity in response to treatment. 
-The standardard workflow should be:
+The standard workflow should be:
 1. Calculate the quality metric of each SNP
     - The scripts assume that genotype files are in bgen format, and organized by chromosome (as from UKBB). 
     - [CalcVariantQuality.R](./Variant_Quality/CalcVariantQuality.R) in [Variant_Quality](./Variant_Quality) is the function to calculate quality metircs of each SNP. This will save text files which would contain quality metrics (Info, MAF, etc) and will be read in subsequent analysis. Ensure that QCTOOL is installed. 
