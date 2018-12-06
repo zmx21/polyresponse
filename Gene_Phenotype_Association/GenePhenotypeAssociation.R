@@ -5,7 +5,7 @@
 ####################################################################################
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship/Target_Score/GetSNPsOfGene.R')
+source('~/MRC_BSU_Internship/Gene_Phenotype_Association/GetSNPsOfGene.R')
 source('~/MRC_BSU_Internship/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 
 library(RcppEigen)
@@ -77,16 +77,16 @@ IterativePruning <- function(gene_name,phenotype,upstream_dist,downstream_dist,p
 }
 
 #Run iterative pruning.
-target_names <- c('SCNN1A','SCNN1B','SCNN1G','SCNN1D','ACE','CACNA1D',
-                  'CACNA1S','CACNA1H','CACNA2D1','CACNA2D2','AGTR1','MME','ADRA2B','GPAT2','PDE5A')
-target_sbp <- lapply(target_names,function(x){
-  result <- IterativePruning(x,'sbp',10000,10000,5e-6,0.3,12)
-  cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
-data.table::fwrite(do.call(rbind,target_sbp),row.names = F,file = '~/bsu_scratch/target_sbp_ukbld.txt')
-target_dbp <- lapply(target_names,function(x){
-  result <- IterativePruning(x,'dbp',10000,10000,5e-6,0.3,12)
-  cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
-data.table::fwrite(do.call(rbind,target_dbp),row.names = F,file = '~/bsu_scratch/target_dbp_ukbld.txt')
+# target_names <- c('SCNN1A','SCNN1B','SCNN1G','SCNN1D','ACE','CACNA1D',
+#                   'CACNA1S','CACNA1H','CACNA2D1','CACNA2D2','AGTR1','MME','ADRA2B','GPAT2','PDE5A')
+# target_sbp <- lapply(target_names,function(x){
+#   result <- IterativePruning(x,'sbp',10000,10000,5e-6,0.3,12)
+#   cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
+# data.table::fwrite(do.call(rbind,target_sbp),row.names = F,file = '~/bsu_scratch/target_sbp_ukbld.txt')
+# target_dbp <- lapply(target_names,function(x){
+#   result <- IterativePruning(x,'dbp',10000,10000,5e-6,0.3,12)
+#   cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
+# data.table::fwrite(do.call(rbind,target_dbp),row.names = F,file = '~/bsu_scratch/target_dbp_ukbld.txt')
 
 
 ####################################################################################

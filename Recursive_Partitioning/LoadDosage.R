@@ -8,7 +8,7 @@
 library(dplyr)
 source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
 source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship/SNP_Marginal_Effect/CalcMarginalEffect.R')
+source('~/MRC_BSU_Internship/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 source('~/MRC_BSU_Internship/Target_Gene_Interactions/CalcInteractions.R')
 LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS){
   #Load rsid which passed interaction threshold.
@@ -44,11 +44,11 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
     dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
     dosageTarget <- dosageTarget[,samplesToKeep]
   }else{
-    #Get marginal effects of rsid
+    #Get mean effects of rsid
     dosageVector <- LoadBgen(path,bgen_file_prefix,targetRS)
     dosageVector <- dosageVector[,samplesToKeep]
     
-    beta_coeff <- CalcMarginalEffect(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,
+    beta_coeff <- CalcSnpPhenoAssociation(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,
                                      eur_only,cov=paste(cov_names,collapse = ','),PC=5,med=1,1,F)$coeff
     #Flip alleles such that all are bp lowering
     dosageTarget <- dosageVector

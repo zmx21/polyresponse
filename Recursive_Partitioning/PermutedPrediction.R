@@ -82,15 +82,15 @@ RunPermutedPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_chunks
   PermutedPrediction(testing_set,paste0(resultPath,suffix),n_cores,tree_chunks,permGenotypeMatrix)
 }
 
-# args=(commandArgs(TRUE))
-# node_size <- as.numeric(args[[1]])
-# thresh <- args[[2]]
-# n_cores <- as.numeric(args[[3]])
-# tree_chunks <- args[[4]]
-node_size <- 10000
-thresh <- '1e-5'
-n_cores <- 16
-tree_chunks <- '2:2'
+args=(commandArgs(TRUE))
+node_size <- as.numeric(args[[1]])
+thresh <- args[[2]]
+n_cores <- as.numeric(args[[3]])
+tree_chunks <- args[[4]]
+# node_size <- 40000
+# thresh <- '1e-5'
+# n_cores <- 16
+# tree_chunks <- '2:2'
 print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks))
 resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
 RunPermutedPrediction(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores,tree_chunks)
