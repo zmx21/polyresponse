@@ -12,7 +12,7 @@ library(RcppEigen)
 library(pbmcapply)
 library(dplyr)
 
-#Collects beta coefficients of all SNPs within a gene region, and calculates marginal effect of each individual SNP
+#Collects beta coefficients of all SNPs within a gene region, and calculates mean effect of each individual SNP
 CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,phenotype,MAF,info,n_cores){
   #Obtain all SNPs which map to the gene
   print('Finding SNPs')
@@ -21,7 +21,7 @@ CollectBetaCoeff <- function(gene_name,upstream_dist,downstream_dist,phenotype,M
   all_snps$info <- as.numeric(all_snps$info)
   all_snps <- all_snps %>% dplyr::filter(minor_allele_frequency > !!MAF & info > !!info)
   
-  #Calculate marginal effect of all snps using the UKBB data
+  #Calculate mean effect of all snps using the UKBB data
   path <-  '~/bsu_scratch/UKB_Data/'
   sample_file_prefix <- 'ukbb_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'

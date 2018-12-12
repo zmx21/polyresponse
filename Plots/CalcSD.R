@@ -1,5 +1,4 @@
 #standard deviation of training set treatment effects. saved and used by other plotting functions. 
-
 library(pbmcapply)
 CalcSD <- function(path){
   allTrees <- dir(paste0(path,'prediction_betas/'))

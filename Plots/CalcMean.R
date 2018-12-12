@@ -17,7 +17,6 @@ resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312
 node_size <- seq(10000,40000,10000)
 thresh <- c('1e-5','2e-5','3e-5','4e-5')
 comb <- expand.grid(node_size,thresh)
-comb <- comb[-4,]
 colnames(comb) <- c('node_size','thresh')
 
 mean_betas <- lapply(1:nrow(comb),function(i) CalcMean(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))

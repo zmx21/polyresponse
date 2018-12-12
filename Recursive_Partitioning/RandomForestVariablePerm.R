@@ -11,8 +11,41 @@ source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
 library(pbmcapply)
 library(partykit)
 library(parallel)
+library(RSQLite)
+library(dplyr)
 
-CreateRandomForestPerm <- function(data,sample_size,n_bootstrap,n_features,tree_min_size,outpath,n_cores,perm_n){
+#Generate training and testing set prediction, given a genotype matrix
+GeneratePrediction <- function(tree,genotypeMatrix,testingSetSamples){
+  nodeAssignment <- predict(tree,genotypeMatrix)
+  nodeAssignment <- as.vector(nodeAssignment)
+  #Calculate treatment effect estimates based on training set
+  trainingMainEffect <- unlist(nodeapply(tree,ids = unique(nodeAssignment),FUN = function(n) as.numeric(unlist(strsplit(x = unlist(n$info),split = "  "))[1])))
+  
+  #Calculate treatment effect estimates based on testing set
+  uniqueLeafNodes <- unique(nodeAssignment)
+  testingMainEffects <- rep(NA,length(uniqueLeafNodes))
+  names(testingMainEffects) <- uniqueLeafNodes
+  for(i in 1:length(uniqueLeafNodes)){
+    currentIndicator <- nodeAssignment == uniqueLeafNodes[i]
+    currentSubset <- lapply(testingSetSamples,function(x) SubsetData(x,currentIndicator))
+    testingMainEffects[i] <- FitMainEffectModel(currentSubset$dosageTarget,currentSubset$phenotypes,currentSubset$covariates)$coeff['treatment']
+  }
+  #results <- list(nodeAssignment = nodeAssignment,testingMainEffects = testingMainEffects,trainingMainEffect=trainingMainEffect)
+  results <- list(testingMainEffects = testingMainEffects,trainingMainEffect=trainingMainEffect)
+  return(results)
+}
+
+#Runs predictions of testing set samples
+PredictFromVarPermRF <- function(testingSetSamples,randomForestPath,tree,tree_index){
+  #Extract genotype matrix from testing set
+  genotypeMatrix <- as.data.frame(testingSetSamples$dosageMatrix)
+  #Calculate beta coeff for each sample for the tree
+  predResult <- GeneratePrediction(tree,genotypeMatrix,testingSetSamples)
+  saveRDS(predResult,paste0(randomForestPath,'/prediction_betas/','tree',tree_index,'.rds'))
+}
+
+CreateRandomForestPerm <- function(data,testing_set,sample_size,n_bootstrap,n_features,tree_min_size,outpath,n_cores,perm_n){
+  system(paste0('mkdir -p ',outpath,'/prediction_betas/'))
   #vector of all sample ids
   samples <- 1:nrow(data$dosageMatrix)
   
@@ -24,7 +57,7 @@ CreateRandomForestPerm <- function(data,sample_size,n_bootstrap,n_features,tree_
     chunks <- 1:as.numeric(n_bootstrap)
   }
   res <- pbmclapply(chunks,function(i) {
-  #res <- lapply(chunks,function(i){
+    #res <- lapply(chunks,function(i){
     flag <- T
     while(flag){
       bootstrapIndex <- samples[sample(1:length(samples),size = sample_size,replace = T)]
@@ -55,11 +88,10 @@ CreateRandomForestPerm <- function(data,sample_size,n_bootstrap,n_features,tree_
         flag <- F
       }
     }
-    bootstrapTreeObj <- list(bootstrapPartyTree = bootstrapPartyTree,bootstrapIndex=bootstrapIndex,outofbagIndex=outofbagIndex)
+    #Save prediction results
+    PredictFromVarPermRF(testing_set,outpath,bootstrapPartyTree,i)
     
-    #Save tree, and bootstrap indices
-    saveRDS(bootstrapTreeObj,paste0(outpath,'tree',i,'.rds'))
-    },mc.cores = n_cores,ignore.interactive = T)
+  },mc.cores = n_cores,ignore.interactive = T)
   #})
 }
 #Parse arguments
@@ -168,5 +200,6 @@ if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh
 #Extract training set.
 training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
+testing_set <- training_testing_set$outofbag
 #Create random forest
-CreateRandomForestPerm(training_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/perm',perm_n,'/'),as.numeric(n_cores))
+CreateRandomForestPerm(training_set,testing_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/perm',perm_n,'/'),as.numeric(n_cores))
