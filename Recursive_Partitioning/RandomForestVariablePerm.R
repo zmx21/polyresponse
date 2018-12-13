@@ -30,8 +30,7 @@ GeneratePrediction <- function(tree,genotypeMatrix,testingSetSamples){
     currentSubset <- lapply(testingSetSamples,function(x) SubsetData(x,currentIndicator))
     testingMainEffects[i] <- FitMainEffectModel(currentSubset$dosageTarget,currentSubset$phenotypes,currentSubset$covariates)$coeff['treatment']
   }
-  #results <- list(nodeAssignment = nodeAssignment,testingMainEffects = testingMainEffects,trainingMainEffect=trainingMainEffect)
-  results <- list(testingMainEffects = testingMainEffects,trainingMainEffect=trainingMainEffect)
+  results <- list(nodeAssignment = nodeAssignment,testingMainEffects = testingMainEffects,trainingMainEffect=trainingMainEffect)
   return(results)
 }
 

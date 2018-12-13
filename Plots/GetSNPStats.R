@@ -13,8 +13,9 @@ anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
 anno_db <- tbl(anno_con,'all_snp_stats')
 anno_db <- anno_db %>% dplyr::filter(rsid %in% includedSNPS) %>% collect()
 
-CACNA1D_SNPs <- dplyr::left_join(anno_db,CACNA1D_SNPs,by=c('rsid' = 'rsid')) %>% dplyr::select(rsid,'P-value'=p,'Main Effect'=coeff,'Chromosome'=chromosome,'Position'=position,'Minor Allele'=minor_allele,'Major Allele'=major_allele)
+CACNA1D_SNPs <- dplyr::left_join(anno_db,CACNA1D_SNPs,by=c('rsid' = 'rsid')) %>% dplyr::select(rsid,'P-value'=p,'Main Effect'=coeff,'Chr'=chromosome,'Position'=position,'Minor Allele'=minor_allele,'Major Allele'=major_allele,'MAF' = minor_allele_frequency)
 CACNA1D_SNPs$`Main Effect` <- signif(CACNA1D_SNPs$`Main Effect`,4)
 CACNA1D_SNPs$`P-value` <- signif(CACNA1D_SNPs$`P-value`,4)
+CACNA1D_SNPs$MAF <- signif(as.numeric(CACNA1D_SNPs$MAF),4)
 
-data.table::fwrite(CACNA1D_SNPs,file='~/figures/final_figures/CACNA1D_SNP_stats.csv',sep = ',')
+data.table::fwrite(CACNA1D_SNPs[order(CACNA1D_SNPs$`P-value`),],file='~/figures/final_figures/CACNA1D_SNP_stats.csv',sep = ',')
