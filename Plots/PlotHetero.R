@@ -1,5 +1,5 @@
 #hisogram of treatment effects, with different p-value threshold and minimum node sizes.
-mean_betas <- readRDS('bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/mean_betas.rds')
+mean_betas <- readRDS('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/mean_betas.rds')
 beta_df <- data.frame(p_thresh=numeric(),node_size=numeric(),beta=numeric())
 for(i in 1:nrow(mean_betas$comb)){
   curBeta <- as.numeric(mean_betas$mean_betas[[i]])
@@ -8,6 +8,8 @@ for(i in 1:nrow(mean_betas$comb)){
                                   beta = curBeta))
 }
 library(ggplot2)
+beta_df$p_thresh <- paste0('p < ',beta_df$p_thresh)
+beta_df$node_size <- paste0('Node Size > ',beta_df$node_size)
 p = ggplot(beta_df, aes(x=beta)) +
   geom_histogram() +
-  facet_grid( node_size ~ p_thresh) + labs(x = 'Main Treatment Effect')
+  facet_grid( node_size ~ p_thresh) + labs(x = 'Individualized Treatment Effect', y = 'Count') + theme(text = element_text(size=14))
