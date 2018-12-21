@@ -20,4 +20,4 @@ comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 
 mean_betas <- lapply(1:nrow(comb),function(i) CalcMean(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
-saveRDS(list(comb = comb,mean_betas= mean_betas),file=paste0(resultPath,'mean_betas.rds'))
+#saveRDS(list(comb = comb,mean_betas= mean_betas),file=paste0(resultPath,'mean_betas.rds'))

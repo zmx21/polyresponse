@@ -104,7 +104,7 @@ if(length(args)==0){
   outpath <- '~/bsu_scratch/Random_Forest/Variable_Perm/'
   n_bootstrap <- '1:1'
   n_features <- '0.75'
-  min_node_size <- 10000
+  min_node_size <- 30000
   n_cores <- 1
   perm_n <- 1
   targetRS <- unlist(strsplit(targetRS,split = ','))
@@ -158,10 +158,12 @@ if(length(args)==0){
 }
 #Check if data has been loaded already, and already saved
 if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds') %in% dir(paste0(outpath,'/dosage_matrix/'))){
-  data <- LoadDosage(as.numeric(p_val_thresh),interaction_path,phenotype,0.3,0.05,0.5,targetRS)
+  print('loading existing dosage matrix')
+  data <- readRDS(paste0('/home/zmx21/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
   data$dosageMatrix <- readRDS(paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
 }else{
-  data <- LoadDosage(as.numeric(p_val_thresh),interaction_path,phenotype,0.3,0.05,0.5,targetRS)
+  print('creating dosage matrix with random SNPs')
+  data <- readRDS(paste0('/home/zmx21/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
   true_predictors <- colnames(data$dosageMatrix)
   n_predictors <- length(true_predictors)
   interaction_results <- data.table::fread(interaction_path)
