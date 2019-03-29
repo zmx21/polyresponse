@@ -1,0 +1,1 @@
+sbatch --array=1-22 -J int_prev ./submit_GxG_Interactions 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760' 'known'

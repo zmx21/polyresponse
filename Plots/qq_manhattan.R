@@ -11,7 +11,7 @@ anno_db <- tbl(anno_con,'all_snp_stats')
 
 
 #Read in results
-results_tbl <- data.table::fread(paste0('~/bsu_scratch/UKB_Data/rs1262894_sbp_eur_age_sex_bmi_PC_med5/all_chr.txt'),header = T)
+results_tbl <- data.table::fread(paste0('/media/sf_D_DRIVE/bsu_scratch/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect_pruned/allchr.txt'),header = T)
 results_tbl$fdr <- p.adjust(results_tbl$p_int,method = 'fdr')
 
 sig_results <- results_tbl %>% dplyr::filter(fdr<0.9)
@@ -27,9 +27,9 @@ manhattan(data.frame(BP=as.numeric(chr12$position),CHR=as.numeric(chr12$chromoso
 
 #QQPlot
 #Convert p values to chi-sq.
-# PToChiSq <- function(p,df){
-#   return(qt(p/2,df) ^2)
-# }
+PToChiSq <- function(p,df){
+  return(qt(p/2,df) ^2)
+}
 # results_tbl_anno <- anno_db %>% dplyr::select(rsid,chromosome) %>% dplyr::filter(rsid %in% results_tbl$rsid) %>% collect()
 
 
@@ -171,7 +171,7 @@ qq.chisq <- function (x, df = 1, x.max, main = "QQ plot", sub = paste("Expected 
 }
 
 # rand_sample <- sample(1:nrow(results_tbl),size = 1000000,replace = F)
-qq.chisq(results_tbl$t_int^2,main = 'rs1262894 all chr (Age,Sex,BMI,5PC)')
+qq.chisq(results_tbl$t_int^2,main = 'HMGCR Interactions - Pruned')
 
 # results_tbl$chi_sq <- unlist(pbmclapply(results_tbl$p,function(x) PToChiSq(x,460209),mc.cores = 30),use.names = F)
 # qq.chisq(results_tbl$chi_sq,main = 'rs1262894 chr10 EUR (Age,Sex,BMI)')

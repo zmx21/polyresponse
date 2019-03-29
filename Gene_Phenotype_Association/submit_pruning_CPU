@@ -17,7 +17,7 @@
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
-#SBATCH --ntasks=1
+#SBATCH --ntasks=16
 #! How much wallclock time will be required?
 #SBATCH --time=01:00:00
 #! What types of email messages do you wish to receive?
@@ -125,4 +125,4 @@ echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks
 echo -e "\nExecuting command:\n==================\n$CMD\n"
 
 #eval $CMD
-Rscript ./GeneScoreMarginalEffect.R 
+Rscript ./GenePhenotypeAssociation.R

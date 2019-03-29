@@ -8,8 +8,8 @@ library(pbmcapply)
 library(partykit)
 
 
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
 #Generate training and testing set prediction, given a genotype matrix
 GeneratePrediction <- function(tree,genotypeMatrix,testingSetSamples){
   nodeAssignment <- predict(tree,genotypeMatrix)
@@ -53,7 +53,8 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
 #MAIN FUNCTION
 RunPredictionFromRF <- function(resultPath,suffix,p_thresh,n_cores){
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
-  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                           readRDS('bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
   testing_set <- training_testing_set$outofbag
   invisible(sapply(paste0(resultPath,suffix),function(x) PredictFromRF(testing_set,x,n_cores)))
 }
@@ -67,5 +68,5 @@ n_cores <- as.numeric(args[[3]])
 #n_cores <- 16
 
 print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
 RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores)

@@ -1,0 +1,1 @@
+sbatch --array=1-22 -J int_ukb ./submit_GxG_Interactions 'rs12916,rs72633963,rs55727654,rs17648121,rs2303152,rs62366588,rs75240579,rs111353455' 'pruned'

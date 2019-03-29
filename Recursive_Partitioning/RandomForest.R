@@ -4,9 +4,9 @@
 #Output: .rds file for each tree.
 ####################################################################################
 
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/LoadDosage.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
 library(pbmcapply)
 library(partykit)
 library(parallel)
@@ -65,11 +65,11 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  interaction_path <- '~/parsed_interaction/CACNA1D_sbp.txt'
-  p_val_thresh <-  '1e-5'
-  targetRS <-  'rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856'
-  phenotype <- 'sbp'
-  outpath <- '~/bsu_scratch/Random_Forest/'
+  interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
+  p_val_thresh <-  '1e-7'
+  targetRS <-  'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
+  phenotype <- 'LDLdirect'
+  outpath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
   n_bootstrap <- '1:16'
   n_features <- '0.75'
   min_node_size <- 40000
@@ -125,7 +125,7 @@ if(paste0('data_p_',as.numeric(p_val_thresh),'.rds') %in% dir(outpath)){
   saveRDS(data,file = paste0(outpath,'data_p_',as.numeric(p_val_thresh),'.rds'))
 }
 #Extract training set.
-training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
 #Create random forest
 CreateRandomForest(training_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/'),as.numeric(n_cores))

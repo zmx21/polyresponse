@@ -6,13 +6,16 @@
 ####################################################################################
 
 library(dplyr)
-source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
-source('~/MRC_BSU_Internship/Target_Gene_Interactions/CalcInteractions.R')
+source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
+source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+source('~/MRC_BSU_Internship_LDL/Target_Gene_Interactions/CalcInteractions.R')
 LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS){
   #Load rsid which passed interaction threshold.
   interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int < p_val_thresh)
+  #Remove missing rows
+  interaction_results <- interaction_results %>% dplyr::filter(!is.na(p_int))
+  interaction_results <- interaction_results %>% dplyr::distinct(rsid,.keep_all=T)
   
   #Connect to rsid annotation database. 
   anno_sql_name<- "all_snp_stats.sqlite"
@@ -23,14 +26,14 @@ LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Inf
   anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
   #Get all rsids meeting criteria
   annotations <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
-  # annotations <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% dplyr::select(rsid,minor_allele_frequency,info,chromosome) %>% collect()
   dbDisconnect(anno_con)
   interaction_results <- interaction_results %>% dplyr::arrange(p_int) %>% dplyr::left_join(annotations,by=c('rsid'='rsid'))
   interaction_results <- interaction_results %>% dplyr::filter(as.numeric(minor_allele_frequency) > MAF & as.numeric(info) > Info) %>% dplyr::select(rsid,p_int,chromosome)
   interaction_results <- interaction_results %>% dplyr::distinct(rsid,.keep_all=T)
+  
   #Load phenotype information and covariates
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-  sample_file_prefix <- 'ukbb_metadata_with_PC'
+  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+  sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'
   cov_names <- c('sex','ages','bmi')
   eur_only <- 1
   

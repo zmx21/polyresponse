@@ -10,10 +10,10 @@ library(parallel)
 library(data.table)
 library(pbmcapply)
 
-source('~/MRC_BSU_Internship/Target_Gene_Interactions/CalcInteractions.R')
-source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+source('~/MRC_BSU_Internship_LDL/Target_Gene_Interactions/CalcInteractions.R')
+source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
+source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 
 #Main function, which calculates GxG interactions with target SNP, in chunks.
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks,training_set){
@@ -70,7 +70,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     
     #Calculate main effects of each individual SNP
     beta_coeff <- CalcSnpPhenoAssociation(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
-    #Flip alleles such that all are bp lowering
+    #Flip alleles such that all are LDL lowering
     dosageTarget <- dosageVector
     for(i in 1:nrow(dosageTarget)){
       if(beta_coeff[i] > 0){
@@ -125,12 +125,12 @@ print(args)
 if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-  sample_file_prefix <- 'ukbb_metadata_with_PC'
+  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+  sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  chr <- '1'
-  phenotype = 'sbp'
-  targetRS <- 'rs1262894'
+  chr <- '5'
+  phenotype = 'LDLdirect'
+  targetRS <- 'rs12916'
   n_cores <- 1
   eur_only <- 1
   out_suffix <- 'test'
@@ -139,14 +139,14 @@ if(length(args)==0){
   MAF <- 0.05
   info <- 0.5
   med=1
-  chunks <- '1,end'
-  training_set <- '~/bsu_scratch/UKB_Data/training_set.rds'
+  chunks <- '1,1'
+  training_set <- '~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'
   if(out_suffix == ''){
-    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
-    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
+    path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/')
+    path_out_chr <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
   }else{
-    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
-    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
+    path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
+    path_out_chr <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
   }
   system(paste0('mkdir -p ',path_out))
   system(paste0('chmod a+rwx ',path_out))
@@ -197,11 +197,11 @@ if(length(args)==0){
     print(paste0(str[i],"   ",args[i]))
   }
   if(out_suffix == ''){
-    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/')
-    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
+    path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/')
+    path_out_chr <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
   }else{
-    path_out <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
-    path_out_chr <- paste0(path,gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
+    path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/')
+    path_out_chr <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'_',out_suffix,'/chr',chr,'/')
   }
   system(paste0('mkdir -p ',path_out))
   system(paste0('chmod a+rwx ',path_out))

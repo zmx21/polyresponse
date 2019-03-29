@@ -3,16 +3,15 @@ library(dplyr)
 LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,med){
   #Load phenotype table
   samplePhenoTbl <- data.table::fread(paste0(path,sample_file_prefix,'.csv'),
-                                      select = c('UKB_genetic_ID','euro','hypdbin',phenotype,cov_names))
-  #Add 10 to blood pressure of medicine takers.
-  if(eur_only != 1 & eur_only != 0){
+                                      select = c('UKB_genetic_ID','euro','lipdbin',phenotype,cov_names))
+  
+  if(med != 1 & med != 0){
     stop('Please specify med')
-  }else if(med == 1 & phenotype == 'sbp'){
-    medicineTakers <- samplePhenoTbl$hypdbin == 'Current'
-    samplePhenoTbl$sbp[medicineTakers] <- samplePhenoTbl$sbp[medicineTakers] + 10
-  }else if(med == 1 & phenotype == 'dbp'){
-    medicineTakers <- samplePhenoTbl$hypdbin == 'Current'
-    samplePhenoTbl$dbp[medicineTakers] <- samplePhenoTbl$dbp[medicineTakers] + 10
+  }
+  #Multiply 1.25 to LDL for medicine takers (medication reduces LDL by 20%).
+  if(med == 1){
+    medicineTakers <- samplePhenoTbl$lipdbin == 'Current'
+    samplePhenoTbl$LDLdirect[medicineTakers] <- samplePhenoTbl$LDLdirect[medicineTakers] * 1.25
   }
   
   #Construct Sample vs Phenotype Table
@@ -41,15 +40,15 @@ LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,m
     covariates <- as.data.frame(covariates[samplesToKeep,])
   }
   
-  #Convert to numeric for non-numeric phenotypes/covariates
+  #Convert to binary for categorical variables with 2 category
   if(!is.numeric(phenotypes)){
-    phenotypes <- as.numeric(as.factor(phenotypes))
+    phenotypes <- as.numeric(as.factor(phenotypes)) - 1
   }
   if(ncol(covariates) > 0){
     for(cov_name in cov_names){
       curVect <- covariates[,cov_name]
       if(!is.numeric(curVect)){
-        covariates[,cov_name] <- as.numeric(as.factor(as.vector(t(curVect))))
+        covariates[,cov_name] <- as.numeric(as.factor(as.vector(t(curVect)))) - 1
       }
     }
   }

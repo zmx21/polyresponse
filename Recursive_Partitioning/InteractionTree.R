@@ -207,6 +207,6 @@ CalculateTotalInteraction <- function(genotypeData,tree,dosageTargetVector,pheno
     splitIndicator[names(dosageSubset) %in% leftSubGroup] <- 1
     G_s[i] <- CalculateInteraction(dosageSubset,splitIndicator,phenotypes[overallSubGroup],covariates[overallSubGroup,])
   }
-  names(G_s) <- as.character(unlist(nodeapply(tree,ids=internalNodes,FUN = function(n) n$info)))
+  names(G_s) <- internalNodes
   return(G_s)
 }

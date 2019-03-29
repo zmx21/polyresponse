@@ -1,9 +1,8 @@
-source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
+source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
 GenerateTrainingTestSet <- function(splitFraction){
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-  sample_file_prefix <- 'ukbb_metadata_with_PC'
-  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  phenotype = 'sbp'
+  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+  sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'
+  phenotype = 'LDLdirect'
   cov_names <- c('sex','ages','bmi')
   eur_only = 1
   med = 1

@@ -36,7 +36,9 @@ GetGenePosition <- function(gene_name){
 #Main function, calls GetGenePosition() to get genomic position, 
 #then calls GetFlankingSNPs() to get all SNPs in the gene region
 AllSNPsOfGene <- function(gene_name,upstream_dist,downstream_dist){
+  print('Getting Gene Pos')
   gene_pos <- GetGenePosition(gene_name)
+  print('Getting Flanking SNPs')
   flanking_snps <- GetFlankingSNPs(gene_pos$chromosome_name,gene_pos$start_position,gene_pos$end_position,upstream_dist,downstream_dist)
   return(flanking_snps)
 }

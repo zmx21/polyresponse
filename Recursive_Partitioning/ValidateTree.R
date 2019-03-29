@@ -5,9 +5,9 @@
 #Output: list of numerics (root squared error)
 ####################################################################################
 
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/LoadDosage.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
 library(partykit)
 library(pbmcapply)
 #Compare training set and true testing set treatment effects
@@ -63,7 +63,8 @@ CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
     return(rse)
   }else if(perm == 'None'){
     data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
-    training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+    training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                             readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
     testing_set <- training_testing_set$outofbag
     rse <- pbmclapply(1:5000,function(i){
       test_tree <- readRDS(paste0(resultPath,suffix,'tree',i,'.rds'))
@@ -96,7 +97,7 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm){
     saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm.rds'))
   }
 }
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
 node_size <- seq(10000,40000,10000)
 thresh <- c('1e-5','2e-5','3e-5','4e-5')
 comb <- expand.grid(node_size,thresh)

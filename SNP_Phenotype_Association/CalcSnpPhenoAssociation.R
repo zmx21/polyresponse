@@ -1,5 +1,5 @@
-source('/home/zmx21/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship/Load_Phenotype/Load_Phenotype.R')
+source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
 
 library(RcppEigen)
 library(pbmcapply)

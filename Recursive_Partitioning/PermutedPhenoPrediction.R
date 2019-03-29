@@ -3,8 +3,8 @@
 #Input: p_value treshold (of predictors to include), and minimum node size of tree.
 #Output: .rds files containing predicted treatment effect of each leaf node
 ####################################################################################
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
 
 library(partykit)
 library(parallel)
@@ -68,7 +68,8 @@ PermutedPhenoPrediction <- function(testingSetSamples,randomForestPath,n_cores,t
 RunPermutedPhenoPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_chunks){
   #Load training set samples
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
-  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                           readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
   remove(data);gc(verbose = F);
   testing_set <- training_testing_set$outofbag
   remove(training_testing_set);gc(verbose = F);
@@ -87,5 +88,5 @@ tree_chunks <- args[[4]]
 # n_cores <- 1
 # tree_chunks <- '1:1'
 print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks))
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
 RunPermutedPhenoPrediction(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores,tree_chunks)

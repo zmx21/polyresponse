@@ -12,14 +12,14 @@
 #! Name of the job:
 
 #! Which project should be charged:
-#SBATCH -A MRC-BSU-SL2-CPU
+#SBATCH -A MRC-BSU-SL3-CPU
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
-#SBATCH --ntasks=16
+#SBATCH --ntasks=32
 #! How much wallclock time will be required?
-#SBATCH --time=10-00:00:00
+#SBATCH --time=12:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -27,7 +27,7 @@
 ##SBATCH --no-requeue
 
 #! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
-#SBATCH -p bsu-cpu
+#SBATCH -p skylake
 
 #! sbatch directives end here (put any additional directives above this line)
 
@@ -123,13 +123,19 @@ fi
 echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)"
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
-interaction_path=$1
-p_val_thresh=$2
-target_rs=$3
-phenotype='LDLdirect'
-outpath='~/bsu_scratch/LDL_Project_Data/Random_Forest/'
-n_boot=$4
+interaction_path="~/parsed_interaction/CACNA1D_sbp.txt"
+p_val_thresh=$1
+target_rs="rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856"
+phenotype="sbp"
+outpath="~/bsu_scratch/Random_Forest/Variable_Perm/"
+n_boot="1:5000"
 n_rand='0.75'
-min_node=$(($SLURM_ARRAY_TASK_ID * 100))
-n_cores=16
-Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/RandomForest.R' $interaction_path $p_val_thresh $target_rs $phenotype $outpath $n_boot $n_rand $min_node $n_cores
+min_node=$2
+perm_n=$SLURM_ARRAY_TASK_ID
+n_cores=32
+offset=4
+perm_start=$(($perm_n - $offset))
+for i in $(seq $perm_start 1 $perm_n)
+do
+	Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/RandomForestVariablePermInteraction.R' $interaction_path $p_val_thresh $target_rs $phenotype $outpath $n_boot $n_rand $min_node $n_cores $i
+done
