@@ -76,31 +76,31 @@ IterativePruning <- function(gene_name,phenotype,upstream_dist,downstream_dist,p
   return(list(rsid=inclSet,coeff = dplyr::filter(betaCoeffFilt,rsid%in%!!inclSet)))
 }
 
-#Run iterative pruning.
-target_names <- c('HMGCR')
-target_LDL <- lapply(target_names,function(x){
-  result <- IterativePruning(x,'LDLdirect',10000,10000,5e-8,0.3,16)
-  cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
-target_LDL <- dplyr::left_join(do.call(rbind,target_LDL),AllSNPsOfGene('HMGCR',10000,10000),by = c('rsid'='rsid'))
-data.table::fwrite(target_LDL,row.names = F,file = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/HMGCR_SNPs.csv')
-
-#Get effect sizes for known snps
-known_snps = c('rs12916','rs17238484','rs5909','rs2303152','rs10066707','rs2006760')
-rs12916_Fit <- CalcSnpPhenoAssociation(path = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/',
-                                            sample_file_prefix = 'ukbb_LDL_metadata_with_PC',
-                                            bgen_file_prefix = 'ukb_imp_chr#_HRConly',
-                                            phenotype = 'LDLdirect',
-                                            known_snps[1],1,cov='sex,ages,bmi',PC=5,med=1,1,T)
-saveRDS(rs12916_Fit,'~/bsu_scratch/LDL_Project_Data/Genotype_Data/rs12916_fit.rds')
-
-
-target_LDL_known <- CalcSnpPhenoAssociation(path = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/',
-                                            sample_file_prefix = 'ukbb_LDL_metadata_with_PC',
-                                            bgen_file_prefix = 'ukb_imp_chr#_HRConly',
-                                            phenotype = 'LDLdirect',
-                                            known_snps,1,cov='sex,ages,bmi',PC=5,med=1,16,F)
-target_LDL_known <- dplyr::left_join(target_LDL_known,AllSNPsOfGene('HMGCR',100000,100000),by = c('rsid'='rsid'))
-data.table::fwrite(target_LDL_known,row.names = F,file = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/HMGCR_SNPs_Known.csv')
+# #Run iterative pruning.
+# target_names <- c('HMGCR')
+# target_LDL <- lapply(target_names,function(x){
+#   result <- IterativePruning(x,'LDLdirect',10000,10000,5e-8,0.3,16)
+#   cbind(data.frame(gene_name=rep(x,nrow(result$coeff)),stringsAsFactors = F),result$coeff)})
+# target_LDL <- dplyr::left_join(do.call(rbind,target_LDL),AllSNPsOfGene('HMGCR',10000,10000),by = c('rsid'='rsid'))
+# data.table::fwrite(target_LDL,row.names = F,file = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/HMGCR_SNPs.csv')
+# 
+# #Get effect sizes for known snps
+# known_snps = c('rs12916','rs17238484','rs5909','rs2303152','rs10066707','rs2006760')
+# rs12916_Fit <- CalcSnpPhenoAssociation(path = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/',
+#                                             sample_file_prefix = 'ukbb_LDL_metadata_with_PC',
+#                                             bgen_file_prefix = 'ukb_imp_chr#_HRConly',
+#                                             phenotype = 'LDLdirect',
+#                                             known_snps[1],1,cov='sex,ages,bmi',PC=5,med=1,1,T)
+# saveRDS(rs12916_Fit,'~/bsu_scratch/LDL_Project_Data/Genotype_Data/rs12916_fit.rds')
+# 
+# 
+# target_LDL_known <- CalcSnpPhenoAssociation(path = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/',
+#                                             sample_file_prefix = 'ukbb_LDL_metadata_with_PC',
+#                                             bgen_file_prefix = 'ukb_imp_chr#_HRConly',
+#                                             phenotype = 'LDLdirect',
+#                                             known_snps,1,cov='sex,ages,bmi',PC=5,med=1,16,F)
+# target_LDL_known <- dplyr::left_join(target_LDL_known,AllSNPsOfGene('HMGCR',100000,100000),by = c('rsid'='rsid'))
+# data.table::fwrite(target_LDL_known,row.names = F,file = '~/bsu_scratch/LDL_Project_Data/Genotype_Data/HMGCR_SNPs_Known.csv')
 
 
 
