@@ -2,12 +2,8 @@
 library(pbmcapply)
 CalcSDPerm <- function(path,node_size,thresh){
   print(path)
-  if(node_size == 40000 & thresh == '1e-5'){
-    chunks <- list(c(1,250),c(251,500),c(501,750),c(751,1000),c(1001,1250),c(1251,1500),c(1501,1750),c(1751,2000),c(2001,2250),c(2251,2500),c(2501,2750),c(2751,3000),c(3001,3250),c(3251,3500),c(3501,3750),c(3751,4000),c(4001,4250),c(4251,4500),c(4501,4750),c(4751,5000))
-  }else{
-    chunks <- list(c(1,500),c(501,1000),c(1001,1500),c(1501,2000),c(2001,2500),c(2501,3000),c(3001,3500),c(3501,4000),c(4001,4500),c(4501,5000))
-  }
-  allChunks <- sapply(chunks,function(x) paste0(path,'prediction_betas_perm/sum_beta_',as.character(x[1]),'_',as.character(x[2]),'.rds'))
+  chunks <- list(c(1,500),c(501,1000),c(1001,1500),c(1501,2000))
+  allChunks <- sapply(chunks,function(x) paste0(path,'prediction_betas_pheno_perm/sum_beta_',as.character(x[1]),'_',as.character(x[2]),'.rds'))
   
   firstBeta <- readRDS(allChunks[1])
   sumBetas <- firstBeta
@@ -22,9 +18,9 @@ CalcSDPerm <- function(path,node_size,thresh){
   sdBeta <- apply(meanBeta,1,sd)
   return(sdBeta)
 }
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
 node_size <- seq(10000,40000,10000)
-thresh <- c('1e-5','2e-5','3e-5','4e-5')
+thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 

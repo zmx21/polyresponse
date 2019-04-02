@@ -1,0 +1,4 @@
+sbatch --array=100,200,300,400 -J 5-6 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_pruned.txt '5e-6' 'rs12916,rs72633963,rs55727654,rs17648121,rs2303152,rs62366588,rs75240579,rs111353455' 2000
+sbatch --array=100,200,300,400 -J 1-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_pruned.txt '1e-5' 'rs12916,rs72633963,rs55727654,rs17648121,rs2303152,rs62366588,rs75240579,rs111353455' 2000 
+sbatch --array=100,200,300,400 -J 3-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_pruned.txt '3e-5' 'rs12916,rs72633963,rs55727654,rs17648121,rs2303152,rs62366588,rs75240579,rs111353455' 2000
+sbatch --array=100,200,300,400 -J 5-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_pruned.txt '5e-5' 'rs12916,rs72633963,rs55727654,rs17648121,rs2303152,rs62366588,rs75240579,rs111353455' 2000

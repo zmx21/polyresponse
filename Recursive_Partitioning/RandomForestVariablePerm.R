@@ -4,10 +4,10 @@
 #Output: .rds file for each tree.
 ####################################################################################
 
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/LoadDosage.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
 library(pbmcapply)
 library(partykit)
 library(parallel)
@@ -76,7 +76,7 @@ CreateRandomForestPerm <- function(data,testing_set,sample_size,n_bootstrap,n_fe
       }
       #Construct current decision tree
       bootstrapTree <- tryCatch({
-        ConstructTree(currentBootstrap,tree_min_size,n_features)
+        ConstructTree(currentBootstrap,as.numeric(tree_min_size),n_features)
       }, error = function(e) {
       })
       bootstrapPartyTree <- tryCatch({
@@ -97,16 +97,17 @@ CreateRandomForestPerm <- function(data,testing_set,sample_size,n_bootstrap,n_fe
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  interaction_path <- '~/parsed_interaction/CACNA1D_sbp.txt'
-  p_val_thresh <-  '1e-5'
-  targetRS <-  'rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856'
-  phenotype <- 'sbp'
-  outpath <- '~/bsu_scratch/Random_Forest/Variable_Perm/'
+  interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
+  p_val_thresh <-  '5e-6'
+  targetRS <-  'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
+  phenotype <- 'LDLdirect'
+  outpath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/Variable_Perm/'
   n_bootstrap <- '1:1'
   n_features <- '0.75'
   min_node_size <- 30000
   n_cores <- 1
   perm_n <- 1
+  data_path <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
   targetRS <- unlist(strsplit(targetRS,split = ','))
   outpath <- paste0(outpath,paste(targetRS,collapse = '_'),'_',phenotype,'/')
   system(paste0('mkdir -p ',outpath))
@@ -116,7 +117,7 @@ if(length(args)==0){
   system(paste0('mkdir -p ',outpath,suffix,'/perm',perm_n))
   
   
-}else if (length(args) != 10){
+}else if (length(args) != 11){
   stop("You need to supply:\n",
        "# 1: Interaction result path\n",
        '# 2: Interaction P-value threshold\n',
@@ -128,6 +129,7 @@ if(length(args)==0){
        "# 8: Minimum node size\n",
        "# 9: Number of cores",
        "#10: Perm Number",
+       '#11: Data Path',
        "Exiting...", call.=FALSE)
 }else{
   print('All Arguments Supplied')
@@ -140,8 +142,9 @@ if(length(args)==0){
            "# 7: Number of random features:",
            "# 8: Minimum node size:",
            "# 9: Number of cores",
-           "#10: Perm Number")
-  variables <- c('interaction_path','p_val_thresh','targetRS','phenotype','outpath','n_bootstrap','n_features','min_node_size','n_cores','perm_n')
+           "#10: Perm Number",
+           "#11: Data Path")
+  variables <- c('interaction_path','p_val_thresh','targetRS','phenotype','outpath','n_bootstrap','n_features','min_node_size','n_cores','perm_n','data_path')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
@@ -156,14 +159,15 @@ if(length(args)==0){
   system(paste0('mkdir -p ',outpath,suffix,'/'))
   system(paste0('mkdir -p ',outpath,suffix,'/perm',perm_n))
 }
+
 #Check if data has been loaded already, and already saved
 if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds') %in% dir(paste0(outpath,'/dosage_matrix/'))){
   print('loading existing dosage matrix')
-  data <- readRDS(paste0('/home/zmx21/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
+  data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
   data$dosageMatrix <- readRDS(paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
 }else{
   print('creating dosage matrix with random SNPs')
-  data <- readRDS(paste0('/home/zmx21/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
+  data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
   true_predictors <- colnames(data$dosageMatrix)
   n_predictors <- length(true_predictors)
   interaction_results <- data.table::fread(interaction_path)
@@ -191,7 +195,7 @@ if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh
     closestRS <- interaction_results$rsid[which.min(abs(currentMAF - as.numeric(interaction_results$minor_allele_frequency)))]
     rand_pred <- c(rand_pred,closestRS)
   }
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
+  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   
   randDosageMatrix <- t(as.matrix(LoadBgen(path,bgen_file_prefix,rand_pred)))[rownames(data$dosageMatrix),]
@@ -199,8 +203,12 @@ if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh
   data$dosageMatrix <- randDosageMatrix
 }
 #Extract training set.
-training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+training_testing_set <- ExtractSubSample(data,
+                                         readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                         readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
 testing_set <- training_testing_set$outofbag
 #Create random forest
-CreateRandomForestPerm(training_set,testing_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/perm',perm_n,'/'),as.numeric(n_cores))
+CreateRandomForestPerm(training_set,testing_set,floor(nrow(training_set$dosageMatrix)*(2/3)),
+                       n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/perm',perm_n,'/'),
+                       as.numeric(n_cores))

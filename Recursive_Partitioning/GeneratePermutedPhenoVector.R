@@ -30,9 +30,11 @@ GeneratePermutatedPhenoMatrix <- function(resultPath,suffix,p_thresh,n_perm){
   permPhenoVector <- lapply(1:n_perm,function(x) GeneratePermutation(testingSetSamples$phenotypes))
   saveRDS(permPhenoVector,file = paste0(paste0(resultPath,'perm_phenotype_p_',p_thresh,'.rds')))
 }
-#args=(commandArgs(TRUE))
-# thresh <- args[[1]]
-thresh <- c('2e-5','3e-5')
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+args=(commandArgs(TRUE))
+thresh <- args[[1]]
+#thresh <- c('2e-6','3e-6','4e-6','5e-6')
+#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect/'
+
 lapply(thresh,function(x) GeneratePermutatedPhenoMatrix(resultPath,
                              suffix = paste0('0.75_',node_size,'_',thresh,'/'),p_thresh = as.numeric(x),n_perm = 1000))

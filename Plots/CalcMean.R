@@ -13,11 +13,11 @@ CalcMean <- function(path){
   meanBetas <- sumBetas/(length(allTrees))
   return(meanBetas)
 }
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
 node_size <- seq(10000,40000,10000)
-thresh <- c('1e-5','2e-5','3e-5','4e-5')
+thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 
 mean_betas <- lapply(1:nrow(comb),function(i) CalcMean(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
-#saveRDS(list(comb = comb,mean_betas= mean_betas),file=paste0(resultPath,'mean_betas.rds'))
+saveRDS(list(comb = comb,mean_betas= mean_betas),file=paste0(resultPath,'mean_betas.rds'))

@@ -1,5 +1,5 @@
 #hisogram of treatment effects, with different p-value threshold and minimum node sizes.
-mean_betas <- readRDS('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/mean_betas.rds')
+mean_betas <- readRDS('~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/mean_betas.rds')
 beta_df <- data.frame(p_thresh=numeric(),node_size=numeric(),beta=numeric())
 for(i in 1:nrow(mean_betas$comb)){
   curBeta <- as.numeric(mean_betas$mean_betas[[i]])

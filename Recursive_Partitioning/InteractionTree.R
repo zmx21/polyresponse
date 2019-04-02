@@ -188,6 +188,7 @@ CalculateTotalInteraction <- function(genotypeData,tree,dosageTargetVector,pheno
   leafNodeAssignment <- predict(tree,genotypeData)
   G_s <- rep(NA,length(internalNodes))
   for(i in 1:length(internalNodes)){
+    print(i)
     #Get information of daughter nodes
     daughterInfo <- nodeapply(tree,ids = internalNodes[i],FUN = function(n) n$kids)
     #Obtain subgroups belonging to left subtree and right subtree

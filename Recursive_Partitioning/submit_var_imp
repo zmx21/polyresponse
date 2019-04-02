@@ -123,8 +123,8 @@ fi
 echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)"
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
-result_path=$1
-p_val_thresh=$2
+result_path="~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/"
+p_val_thresh=$1
 min_node=$(($SLURM_ARRAY_TASK_ID * 100))
 n_cores=16
-Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/VariableImportance.R' $result_path $p_val_thresh $min_node $n_cores
+Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/VariableImportance.R' $result_path $p_val_thresh $min_node $n_cores

@@ -41,20 +41,20 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
   #Extract genotype matrix from testing set
   genotypeMatrix <- as.data.frame(testingSetSamples$dosageMatrix)
   #Calculate beta coeff for each sample for each tree
-  #trash <- pbmclapply(1:5000,function(k){
-  trash <- lapply(1:5000,function(k){
+  trash <- pbmclapply(1:2000,function(k){
+  #trash <- lapply(1:2000,function(k){
     treeObj <- readRDS(treePaths[k])
     tree <- treeObj$bootstrapPartyTree
     saveRDS(GeneratePrediction(tree,genotypeMatrix,testingSetSamples),paste0(randomForestPath,'prediction_betas/','tree',k,'.rds'))
-  })
-  # },mc.cores = n_cores,ignore.interactive = T)
+  #})
+  },mc.cores = n_cores,ignore.interactive = T)
 }
 
 #MAIN FUNCTION
 RunPredictionFromRF <- function(resultPath,suffix,p_thresh,n_cores){
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
   training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
-                                           readRDS('bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
+                                           readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
   testing_set <- training_testing_set$outofbag
   invisible(sapply(paste0(resultPath,suffix),function(x) PredictFromRF(testing_set,x,n_cores)))
 }
@@ -68,5 +68,7 @@ n_cores <- as.numeric(args[[3]])
 #n_cores <- 16
 
 print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect/'
+
 RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores)

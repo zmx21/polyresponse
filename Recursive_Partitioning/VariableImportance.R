@@ -5,8 +5,8 @@
 ####################################################################################
 
 
-source('~/MRC_BSU_Internship/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship/Recursive_Partitioning/ExtractSubsample.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
 library(pbmcapply)
 library(parallel)
 library(partykit)
@@ -31,9 +31,9 @@ VariableImportance <- function(bootstrapTree,outOfBagData){
 }
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
-  p_thresh <-  '3e-5'
-  node_size <- 35000
+  resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+  p_thresh <-  '5e-5'
+  node_size <- 10000
   n_cores <- 16
 }else if (length(args) != 4){
   stop("You need to supply:\n",
@@ -55,17 +55,17 @@ if(length(args)==0){
   }
 }
 RunVarImp <- function(treeIndex,resultPath,node_size,p_thresh,testing_set,training_set){
+  system(paste0('mkdir -p ',paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/var_imp/')))
+  
   currentTree <- readRDS(paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/tree',treeIndex,'.rds'))
-  currentTree$testingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,testing_set)
-  currentTree$trainingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,ExtractSubSample(training_set,currentTree$bootstrapIndex,currentTree$outofbagIndex)$bootstrap)
-  if(!is.null(currentTree$variableImportance)){
-    currentTree$outOfBagVarImp <- currentTree$variableImportance
-    currentTree$variableImportance <- NULL
-  }
-  saveRDS(currentTree,paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/tree',treeIndex,'.rds'))
+  var_imp <- list()
+  var_imp$testingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,testing_set)
+  var_imp$trainingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,ExtractSubSample(training_set,currentTree$bootstrapIndex,currentTree$outofbagIndex)$bootstrap)
+  saveRDS(var_imp,paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/var_imp/tree_var_imp',treeIndex,'.rds'))
 }
 data <- readRDS(paste0(resultPath,'data_p_',as.numeric(p_thresh),'.rds'))
-training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                         readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 testing_set <- training_testing_set$outofbag
 training_set <- training_testing_set$bootstrap
-trash <- pbmclapply(1:5000,function(i) RunVarImp(i,resultPath,node_size,p_thresh,testing_set,training_set),ignore.interactive = T,mc.cores = n_cores)
+trash <- pbmclapply(1:2000,function(i) RunVarImp(i,resultPath,node_size,p_thresh,testing_set,training_set),ignore.interactive = T,mc.cores = n_cores)

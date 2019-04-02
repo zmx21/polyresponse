@@ -1,0 +1,7 @@
+for i in '10000' '20000' '30000' '40000'
+do
+	sbatch --nice=2147483645 --array=1-50 -J 'vp56_'$i ./submit_perm_random_forest_bsu_cpu '5e-6' $i
+	sbatch --nice=2147483645 --array=1-50 -J 'vp15_'$i ./submit_perm_random_forest_bsu_cpu '1e-5' $i
+	sbatch --nice=2147483645 --array=1-50 -J 'vp35_'$i ./submit_perm_random_forest_bsu_cpu '3e-5' $i
+	sbatch --array=1-50 -J 'vp55_'$i ./submit_perm_random_forest '5e-5' $i
+done

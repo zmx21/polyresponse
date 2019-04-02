@@ -49,7 +49,7 @@ CompareBetaPerm <- function(perm_results,tree){
 #Get treatment effects for all trees within random forest and collapse.
 CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
   if(perm=='Geno'){
-    rse <- pbmclapply(1:5000,function(i){
+    rse <- pbmclapply(1:2000,function(i){
       #Perm ordering is different
       #find all individual trees in random forest
       treePaths <- dir(paste0(resultPath,suffix))
@@ -66,13 +66,13 @@ CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
     training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
                                              readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
     testing_set <- training_testing_set$outofbag
-    rse <- pbmclapply(1:5000,function(i){
+    rse <- pbmclapply(1:2000,function(i){
       test_tree <- readRDS(paste0(resultPath,suffix,'tree',i,'.rds'))
       CompareBeta(testing_set,test_tree$bootstrapPartyTree)$rse
     },mc.cores = n_cores,ignore.interactive = T)
     return(rse)
   }else{
-    rse <- pbmclapply(1:5000,function(i){
+    rse <- pbmclapply(1:2000,function(i){
       #Precalculated list of permuted predictions should be saved (saved by PermutedPrediction.R)
       perm_result <- readRDS(paste0(resultPath,suffix,'prediction_betas_pheno_perm/testing_main_effects_tree',i,'.rds'))
       test_tree <- readRDS(paste0(resultPath,suffix,'tree',i,'.rds'))$bootstrapPartyTree
@@ -97,14 +97,14 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm){
     saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm.rds'))
   }
 }
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
 node_size <- seq(10000,40000,10000)
-thresh <- c('1e-5','2e-5','3e-5','4e-5')
+thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
-n_cores <- 32
+n_cores <- 16
 
-# lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None'))
+lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None'))
 # lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Geno'))
 lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno'))
 

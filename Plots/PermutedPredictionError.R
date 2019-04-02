@@ -1,5 +1,4 @@
-source('https://raw.githubusercontent.com/nathanvan/mcmc-in-irt/master/post-10-mclapply-hack.R')
-
+library(pbmcapply)
 #Plot comparison of root squared error between true testing set and permuted testing set
 CalcPredErrorDiffRel <- function(path){
   print(path)
@@ -58,18 +57,18 @@ CalcPredErrorDiffAbs <- function(path){
 
 
 
-resultPath <- '~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
 node_size <- seq(10000,40000,10000)
-thresh <- c('1e-5','2e-5','3e-5','4e-5')
+thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 
 print('Calc abs diff')
-pred_diff_abs <- mclapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 2)
+pred_diff_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 print('Calc rel diff')
-pred_diff_rel <- mclapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 2)
+pred_diff_rel <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 print('Calc rel pop diff')
-pred_diff_rel_pop <- mclapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 2)
+pred_diff_rel_pop <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 
 pred_diff_rel_df <- data.frame(p_thresh=numeric(),node_size=numeric(),diff=numeric(),sd=numeric())
 for(i in 1:length(pred_diff_rel)){
@@ -125,3 +124,5 @@ p3 <- ggplot(pred_diff_abs_df, aes(x=factor(node_size), y=diff)) +
   geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
                 position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
   labs(y='Mean Absolute Difference in Prediction Error',x = 'Min Node Size') + theme(text = element_text(size=14))
+
+save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')

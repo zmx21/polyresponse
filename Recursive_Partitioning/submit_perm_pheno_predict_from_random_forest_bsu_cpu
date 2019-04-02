@@ -127,4 +127,4 @@ min_node=$(($SLURM_ARRAY_TASK_ID * 100))
 n_cores=15
 thresh=$1
 tree_chunk=$2
-Rscript '/home/zmx21/MRC_BSU_Internship/Recursive_Partitioning/PermutedPhenoPrediction.R' $min_node $thresh $n_cores $tree_chunk
+Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/PermutedPhenoPrediction.R' $min_node $thresh $n_cores $tree_chunk
