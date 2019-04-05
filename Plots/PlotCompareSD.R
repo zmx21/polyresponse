@@ -1,14 +1,9 @@
 nonperm_sd <- readRDS(file = '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/nonperm_sd.rds')
-perm_sd <- list()
-perm_sd$comb <- do.call(rbind,lapply(1:12,function(i) readRDS(file = paste0('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/var_perm_sd_',i,'.rds'))$comb))
-perm_sd$perm_sd <- lapply(1:12,function(i) unlist(readRDS(file = paste0('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/var_perm_sd_',i,'.rds'))$result))
-
-nonperm_sd$comb <- nonperm_sd$comb[1:12,]
-nonperm_sd$nonperm_sd <- nonperm_sd$nonperm_sd[1:12]
-
+perm_sd <- readRDS(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/perm_sd.rds')
 
 sd_df <- data.frame(p_thresh=numeric(),node_size=numeric(),sd=numeric(),nonperm_sd=numeric(),p_val = numeric())
-p_vals <- sapply(1:12,function(i) paste0('p=',sum(unlist(perm_sd$perm_sd[i]) > nonperm_sd$nonperm_sd[[i]]) / 100))
+
+p_vals <- sapply(1:length(perm_sd$perm_sd),function(i) paste0('p=',sum(abs(unlist(perm_sd$perm_sd[i])) > abs(nonperm_sd$nonperm_sd[[i]])) / 1000))
 
 for(i in 1:nrow(perm_sd$comb)){
   curSd <- as.numeric(perm_sd$perm_sd[[i]])
@@ -18,6 +13,7 @@ for(i in 1:nrow(perm_sd$comb)){
                       nonperm_sd = rep(nonperm_sd$nonperm_sd[[i]],length(curSd)),
                       p_val = rep(p_vals[i],length(curSd))))
 }
+
 library(ggplot2)
 
 p = ggplot(sd_df, aes(x=sd)) +

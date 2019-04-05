@@ -70,13 +70,13 @@ CreateRandomForestPermInteraction <- function(data,testing_set,
 args=(commandArgs(TRUE))
 if(length(args)==0){
   interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
-  p_val_thresh <-  '5e-6'
+  p_val_thresh <-  '5e-5'
   targetRS <-  'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
   phenotype <- 'LDLdirect'
   outpath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/Variable_Perm_Interaction/'
   n_bootstrap <- '1:1'
   n_features <- '0.75'
-  min_node_size <- 30000
+  min_node_size <- 10000
   n_cores <- 1
   perm_n <- 1
   data_path <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
@@ -138,41 +138,53 @@ if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh
   data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
   data$dosageMatrix <- readRDS(paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
 }else{
-  print('creating dosage matrix with random SNPs')
-  data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
-  true_predictors <- colnames(data$dosageMatrix)
-  n_predictors <- length(true_predictors)
-  interaction_results <- data.table::fread(interaction_path)
-  #choose 2000 random SNPs
-  interaction_results <- interaction_results[sample(1:nrow(interaction_results),size = 2000),]
-  #Connect to rsid annotation database. 
-  anno_sql_name<- "all_snp_stats.sqlite"
-  path <- '~/bsu_scratch/SQL/'
-  curwd <- getwd()
-  setwd(path)
-  anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
-  anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
-  #Get all rsids meeting criteria
-  true_anno <- anno_db %>% dplyr::filter(rsid %in% true_predictors) %>% collect() %>% dplyr::select(rsid,minor_allele_frequency)
-  anno <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
-  dbDisconnect(anno_con)
-  setwd(curwd)
-  interaction_results <- interaction_results %>% dplyr::left_join(anno,by=c('rsid'='rsid')) %>% dplyr::filter(as.numeric(info) > 0.5)
-  
-  #Find matching pred with similar MAF
-  rand_pred <- c()
-  for(i in 1:nrow(true_anno)){
-    currentRS <- true_anno$rsid[i]
-    currentMAF <- as.numeric(true_anno$minor_allele_frequency[i])
-    closestRS <- interaction_results$rsid[which.min(abs(currentMAF - as.numeric(interaction_results$minor_allele_frequency)))]
-    rand_pred <- c(rand_pred,closestRS)
+  flag <- T
+  while(flag){
+    print('creating dosage matrix with random SNPs')
+    data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
+    true_predictors <- colnames(data$dosageMatrix)
+    n_predictors <- length(true_predictors)
+    interaction_results <- data.table::fread(interaction_path)
+    #choose 2000 random SNPs
+    interaction_results <- interaction_results[sample(1:nrow(interaction_results),size = 2000),]
+    #Connect to rsid annotation database. 
+    anno_sql_name<- "all_snp_stats.sqlite"
+    path <- '~/bsu_scratch/SQL/'
+    curwd <- getwd()
+    setwd(path)
+    anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
+    anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
+    #Get all rsids meeting criteria
+    true_anno <- anno_db %>% dplyr::filter(rsid %in% true_predictors) %>% collect() %>% dplyr::select(rsid,minor_allele_frequency)
+    anno <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
+    dbDisconnect(anno_con)
+    setwd(curwd)
+    interaction_results <- interaction_results %>% dplyr::left_join(anno,by=c('rsid'='rsid')) %>% dplyr::filter(as.numeric(info) > 0.5)
+    
+    #Find matching pred with similar MAF
+    rand_pred <- c()
+    for(i in 1:nrow(true_anno)){
+      currentRS <- true_anno$rsid[i]
+      currentMAF <- as.numeric(true_anno$minor_allele_frequency[i])
+      closestRS <- interaction_results$rsid[which.min(abs(currentMAF - as.numeric(interaction_results$minor_allele_frequency)))]
+      rand_pred <- c(rand_pred,closestRS)
+    }
+    path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+    bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+    randDosageMatrix <- tryCatch({
+      t(as.matrix(LoadBgen(path,bgen_file_prefix,rand_pred)))[rownames(data$dosageMatrix),]
+    }, error = function(e) {
+      print('dim mismatch err')
+    })
+    if(is.matrix(randDosageMatrix)){
+      flag <- F
+    }else{
+      print('dim mismatch')
+      next
+    }
+    saveRDS(randDosageMatrix,paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
+    data$dosageMatrix <- randDosageMatrix
   }
-  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
-  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  
-  randDosageMatrix <- t(as.matrix(LoadBgen(path,bgen_file_prefix,rand_pred)))[rownames(data$dosageMatrix),]
-  saveRDS(randDosageMatrix,paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
-  data$dosageMatrix <- randDosageMatrix
 }
 #Extract training set.
 training_testing_set <- ExtractSubSample(data,

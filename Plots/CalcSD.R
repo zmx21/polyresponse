@@ -18,7 +18,7 @@ node_size <- seq(10000,40000,10000)
 thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
-n_cores <- 12
+n_cores <- 10
 
 nonperm_sd <- pbmclapply(1:nrow(comb),function(i) CalcSD(paste0(resultPath,'0.75_',comb$node_size[i],'_',
                                                                 as.character(comb$thresh[i]),'/')),ignore.interactive = T,mc.cores = n_cores)

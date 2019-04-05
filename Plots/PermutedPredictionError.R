@@ -103,26 +103,37 @@ for(i in 1:length(pred_diff_rel_pop)){
                                                         low_CI = quantile(curDiff,probs = c(0.025)),
                                                         high_CI = quantile(curDiff,probs = c(0.975))))
 }
-
-
 library(ggplot2)
-p1 <- ggplot(pred_diff_rel_df, aes(x=factor(node_size), y=diff)) +
-  geom_point()+
-  geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
-                position=position_dodge(0.05))+ facet_grid(~factor(p_thresh)) + 
-  labs(y='Mean Relative Difference in Prediction Error',x = 'Minimum Node Size') + theme(text = element_text(size=14))
+pd=position_dodge(0.05)
+p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(node_size))) + 
+  geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) + 
+  geom_line(position=pd)+
+  geom_point(position=pd)+
+  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) + 
+  ylab('Mean Population Relative Difference \n in Prediction Error') + 
+  labs(colour='Minimum\nNode Size')+
+  scale_y_continuous(breaks=seq(-10,0,2),limits=c(-10,0))+
+  scale_x_continuous(breaks=seq(4.2,5.4,0.2),limits=c(4.2,5.4)) +
+  theme(text = element_text(size=14))
 
-p2 <- ggplot(pred_diff_relpop_df, aes(x=factor(node_size), y=diff)) +
-  geom_point()+
-  geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
-                position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
-  labs(y='Mean Population Relative Difference in Prediction Error',x = 'Minimum Node Size') + theme(text = element_text(size=14)) 
+# library(ggplot2)
+# p1 <- ggplot(pred_diff_rel_df, aes(x=factor(node_size), y=diff)) +
+#   geom_point()+
+#   geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
+#                 position=position_dodge(0.05))+ facet_grid(~factor(p_thresh)) + 
+#   labs(y='Mean Relative Difference in Prediction Error',x = 'Minimum Node Size') + theme(text = element_text(size=14))
+# 
+# p2 <- ggplot(pred_diff_relpop_df, aes(x=factor(node_size), y=diff)) +
+#   geom_point()+
+#   geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
+#                 position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
+#   labs(y='Mean Population Relative Difference in Prediction Error',x = 'Minimum Node Size') + theme(text = element_text(size=14)) 
+# 
+# 
+# p3 <- ggplot(pred_diff_abs_df, aes(x=factor(node_size), y=diff)) +
+#   geom_point()+
+#   geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
+#                 position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
+#   labs(y='Mean Absolute Difference in Prediction Error',x = 'Min Node Size') + theme(text = element_text(size=14))
 
-
-p3 <- ggplot(pred_diff_abs_df, aes(x=factor(node_size), y=diff)) +
-  geom_point()+
-  geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
-                position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
-  labs(y='Mean Absolute Difference in Prediction Error',x = 'Min Node Size') + theme(text = element_text(size=14))
-
-save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')
+# save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')

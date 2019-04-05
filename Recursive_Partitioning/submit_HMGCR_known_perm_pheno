@@ -1,8 +1,7 @@
 for i in '1:500' '501:1000' '1001:1500' '1501:2000'
 do
-	#sbatch --array=100,200,300,400 -J '56'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-6' $i
-	#sbatch --array=100,200,300,400 -J '15'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-5' $i
-	#sbatch --array=100,200,300,400 -J '35'$i ./submit_perm_pheno_predict_from_random_forest '3e-5' $i
-	#sbatch --array=100,200,300,400 -J '55'$i ./submit_perm_pheno_predict_from_random_forest '5e-5' $i
-	sbatch --array=100 -J '55'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-5' $i
+	sbatch --nice=+100 --array=100,200,300,400 -J '56'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-6' $i
+	sbatch --nice=+100 --array=100,200,300,400 -J '15'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-5' $i
+	sbatch --nice=+100 --array=100,200,300,400 -J '35'$i ./submit_perm_pheno_predict_from_random_forest '3e-5' $i
+	sbatch --nice=+100 --array=100,200,300,400 -J '55'$i ./submit_perm_pheno_predict_from_random_forest '5e-5' $i
 done
