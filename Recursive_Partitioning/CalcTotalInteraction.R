@@ -11,7 +11,7 @@ library(pbmcapply)
 library(partykit)
 library(parallel)
 
-GetTotalInteraction <- function(testing_set,n_bootstrap,outpath,n_cores){
+GetTotalInteraction <- function(testing_set,training_set,n_bootstrap,outpath,n_cores){
   system(paste0('mkdir -p ',outpath,'tree_interactions/'))
   #Get all trees
   if(grepl(':',n_bootstrap)){
@@ -23,9 +23,13 @@ GetTotalInteraction <- function(testing_set,n_bootstrap,outpath,n_cores){
   res <- pbmclapply(chunks,function(i) {
   #res <- lapply(chunks,function(i){
     curTree <- readRDS(paste0(outpath,'tree',i,'.rds'))
+    cur_training_set <- ExtractSubSample(training_set,curTree$bootstrapIndex,curTree$outofbagIndex)$bootstrap
     #Get Total interaction of current tree
-    CalculateTotalInteraction(as.data.frame(testing_set$dosageMatrix),curTree$bootstrapPartyTree,testing_set$dosageTarget,
+    testingInteractions <- CalculateTotalInteraction(as.data.frame(testing_set$dosageMatrix),curTree$bootstrapPartyTree,testing_set$dosageTarget,
                               testing_set$phenotypes,testing_set$covariates)
+    trainingInteractions <- CalculateTotalInteraction(as.data.frame(cur_training_set$dosageMatrix),curTree$bootstrapPartyTree,cur_training_set$dosageTarget,
+                                                      cur_training_set$phenotypes,cur_training_set$covariates)
+    return(list(test=testingInteractions,train=trainingInteractions))
   },mc.cores = n_cores,ignore.interactive = T)
   #})
   saveRDS(res,paste0(outpath,'tree_interactions/','interactions.rds'))
@@ -91,5 +95,6 @@ data <- readRDS(paste0(outpath,'data_p_',as.numeric(p_val_thresh),'.rds'))
 training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
                                          readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 testing_set <- training_testing_set$outofbag
+training_set <- training_testing_set$bootstrap
 #Create random forest
-GetTotalInteraction(testing_set,n_bootstrap,paste0(outpath,suffix,'/'),as.numeric(n_cores))
+GetTotalInteraction(testing_set,training_set,n_bootstrap,paste0(outpath,suffix,'/'),as.numeric(n_cores))

@@ -24,3 +24,4 @@ output <- cbind(chr_pos,dplyr::select(interaction_results,alleleA,alleleB,p_int)
 output$p_int <- as.character(output$p_int)
 
 data.table::fwrite(output,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/HMGCR_int_parsed',col.names = F,sep='\t')
+

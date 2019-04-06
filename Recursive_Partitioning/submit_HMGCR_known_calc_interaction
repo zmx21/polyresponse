@@ -2,4 +2,3 @@ sbatch --array=100,200,300,400 -J in5-6 ./submit_calc_interaction ~/bsu_scratch/
 sbatch --array=100,200,300,400 -J in1-5 ./submit_calc_interaction ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt '1e-5' 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760' 2000
 sbatch --array=100,200,300,400 -J in3-5 ./submit_calc_interaction ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt '3e-5' 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760' 2000
 sbatch --array=100,200,300,400 -J in5-5 ./submit_calc_interaction ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt '5e-5' 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760' 2000
-#sbatch --array=100,200,300,400 -J 7-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt '7e-5' 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760' 2000

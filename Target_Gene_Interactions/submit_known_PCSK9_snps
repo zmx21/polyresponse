@@ -1,0 +1,2 @@
+sbatch --array=16-22 -J int_PCSK9 ./submit_GxG_Interactions_GPU 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 'known'
+#sbatch --array=1-15 -J int_PCSK9 ./submit_GxG_Interactions 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 'known'

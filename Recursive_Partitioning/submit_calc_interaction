@@ -12,12 +12,12 @@
 #! Name of the job:
 
 #! Which project should be charged:
-#SBATCH -A MRC-BSU-SL2-CPU
+#SBATCH -A MRC-BSU-SL2-GPU
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
-#SBATCH --ntasks=16
+#SBATCH --ntasks=12
 #! How much wallclock time will be required?
 #SBATCH --time=10-00:00:00
 #! What types of email messages do you wish to receive?
@@ -27,7 +27,7 @@
 ##SBATCH --no-requeue
 
 #! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
-#SBATCH -p bsu-cpu
+#SBATCH -p bsu-gpu
 
 #! sbatch directives end here (put any additional directives above this line)
 
@@ -131,5 +131,5 @@ outpath='~/bsu_scratch/LDL_Project_Data/Random_Forest/'
 n_boot=$4
 n_rand='0.75'
 min_node=$(($SLURM_ARRAY_TASK_ID * 100))
-n_cores=16
+n_cores=10
 Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/CalcTotalInteraction.R' $interaction_path $p_val_thresh $target_rs $phenotype $outpath $n_boot $n_rand $min_node $n_cores

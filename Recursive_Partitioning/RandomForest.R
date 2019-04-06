@@ -66,7 +66,7 @@ CreateRandomForest <- function(data,sample_size,n_bootstrap,n_features,tree_min_
 args=(commandArgs(TRUE))
 if(length(args)==0){
   interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
-  p_val_thresh <-  '1e-7'
+  p_val_thresh <-  '1e-4'
   targetRS <-  'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
   phenotype <- 'LDLdirect'
   outpath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/'

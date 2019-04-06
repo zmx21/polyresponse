@@ -1,4 +1,5 @@
 library(pbmcapply)
+library(dbplyr)
 #Plot comparison of root squared error between true testing set and permuted testing set
 CalcPredErrorDiffRel <- function(path){
   print(path)
@@ -54,6 +55,23 @@ CalcPredErrorDiffAbs <- function(path){
   return(diff/numSubGroup)
 }
 
+CalcPredErrorAbs <- function(path){
+  print(path)
+  nonPermError <- readRDS(paste0(path,'beta_err.rds'))
+  permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  nonPermRMSE <- 0
+  permRMSE <- rep(0,1000)
+  
+  numSubGroup <- 0
+  for(i in 1:length(nonPermError)){
+    curNonPerm <- nonPermError[[i]]
+    curPerm <- permError[[i]]
+    numSubGroup <- numSubGroup + length(curNonPerm)
+    permRMSE <- permRMSE + sapply(curPerm,function(x) sum(x))
+    nonPermRMSE <-nonPermRMSE + sum(curNonPerm)
+  }
+  return(list(permRMSE=permRMSE/numSubGroup,nonPermRMSE=nonPermRMSE/numSubGroup))
+}
 
 
 
@@ -63,12 +81,16 @@ thresh <- c('5e-6','1e-5','3e-5','5e-5')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 
+pred_error_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
+
+
 print('Calc abs diff')
-pred_diff_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
+pred_diff_abs <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
 print('Calc rel diff')
-pred_diff_rel <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
+pred_diff_rel <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
 print('Calc rel pop diff')
-pred_diff_rel_pop <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
+pred_diff_rel_pop <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
+
 
 pred_diff_rel_df <- data.frame(p_thresh=numeric(),node_size=numeric(),diff=numeric(),sd=numeric())
 for(i in 1:length(pred_diff_rel)){
@@ -110,11 +132,24 @@ p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(no
   geom_line(position=pd)+
   geom_point(position=pd)+
   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) + 
-  ylab('Mean Population Relative Difference \n in Prediction Error') + 
+  ylab('Relative Difference in RMSE\n between True and Permuted') + 
   labs(colour='Minimum\nNode Size')+
   scale_y_continuous(breaks=seq(-10,0,2),limits=c(-10,0))+
   scale_x_continuous(breaks=seq(4.2,5.4,0.2),limits=c(4.2,5.4)) +
   theme(text = element_text(size=14))
+
+
+pd=position_dodge(0)
+pred_err_abs_df <- data.frame(p_thresh=as.numeric(as.character(comb$thresh)),node_size=comb$node_size,rmse=sapply(pred_error_abs,function(x) x$nonPermRMSE))
+p2 <- ggplot(pred_err_abs_df,aes(x=-1*log10(p_thresh),y=rmse,colour=factor(node_size))) + 
+  geom_line(position=pd)+
+  geom_point(position=pd)+
+  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) + 
+  ylab('Root Mean Standard Error') + 
+  labs(colour='Minimum\nNode Size')+
+  theme(text = element_text(size=14))
+
+save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')
 
 # library(ggplot2)
 # p1 <- ggplot(pred_diff_rel_df, aes(x=factor(node_size), y=diff)) +
@@ -135,5 +170,3 @@ p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(no
 #   geom_errorbar(aes(ymin=low_CI, ymax=high_CI), width=.2,
 #                 position=position_dodge(0.05))+ facet_grid(~factor(p_thresh))  + 
 #   labs(y='Mean Absolute Difference in Prediction Error',x = 'Min Node Size') + theme(text = element_text(size=14))
-
-# save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')
