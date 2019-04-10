@@ -1,6 +1,6 @@
-#sbatch --array=100,200,300,400 -J P5-6 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '5e-6' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
-#sbatch --array=100,200,300,400 -J P1-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '1e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
-#sbatch --array=100,200,300,400 -J P3-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '3e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
-#sbatch --array=100,200,300,400 -J P5-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '5e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
-sbatch --array=100,200,300,400 -J P1-4 ./submit_random_forest ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '1e-4' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
-sbatch --array=100,200,300,400 -J P7-5 ./submit_random_forest ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '7e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P5-6 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '5e-6' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P1-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '1e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P3-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '3e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P5-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '5e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P1-4 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '1e-4' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000
+sbatch --array=50 -J P7-5 ./submit_random_forest_GPU ~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt '7e-5' 'rs11206510,rs2479409,rs2149041,rs2479394,rs10888897,rs7552841,rs562556' 2000

@@ -97,9 +97,9 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm){
     saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm.rds'))
   }
 }
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-node_size <- seq(10000,40000,10000)
-thresh <- c('5e-6','1e-5','3e-5','5e-5')
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs11206510_rs2479409_rs2149041_rs2479394_rs10888897_rs7552841_rs562556_LDLdirect/'
+node_size <- c(5000,10000,20000,30000,40000)
+thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 n_cores <- 16

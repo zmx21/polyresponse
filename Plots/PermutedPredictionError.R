@@ -76,10 +76,11 @@ CalcPredErrorAbs <- function(path){
 
 
 resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-node_size <- seq(10000,40000,10000)
-thresh <- c('5e-6','1e-5','3e-5','5e-5')
+node_size <- c(5000,10000,20000,30000,40000)
+thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
+comb <- comb[-1,]
 
 pred_error_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 
@@ -135,7 +136,7 @@ p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(no
   ylab('Relative Difference in RMSE\n between True and Permuted') + 
   labs(colour='Minimum\nNode Size')+
   scale_y_continuous(breaks=seq(-10,0,2),limits=c(-10,0))+
-  scale_x_continuous(breaks=seq(4.2,5.4,0.2),limits=c(4.2,5.4)) +
+  scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) +
   theme(text = element_text(size=14))
 
 

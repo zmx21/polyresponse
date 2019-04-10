@@ -4,8 +4,13 @@ do
 	#sbatch --nice=+100 --array=100,200,300,400 -J '15'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-5' $i
 	#sbatch --nice=+100 --array=100,200,300,400 -J '35'$i ./submit_perm_pheno_predict_from_random_forest '3e-5' $i
 	#sbatch --nice=+100 --array=100,200,300,400 -J '55'$i ./submit_perm_pheno_predict_from_random_forest '5e-5' $i
-	sbatch --array=400 --begin=now+120minutes -J '14'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '1e-4' $i
-	sbatch --array=300 --begin=now+180minutes -J '14'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '1e-4' $i
-	sbatch --array=200 --begin=now+260minutes -J '14'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-4' $i
-	sbatch --array=100 --begin=now+430minutes -J '14'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-4' $i
+	#sbatch --array=50 -J '56'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-6' $i
+	#sbatch --array=50 -J '15'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '1e-5' $i
+	#sbatch --array=50 -J '35'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '3e-5' $i
+	#sbatch --array=50 -J '55'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-5' $i
+	sbatch --array=50 --begin=now+82hours -J '54'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-4' $i
+	sbatch --array=100 --begin=now+58hours -J '54'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-4' $i
+	sbatch --array=200 --begin=now+38hours -J '54'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-4' $i
+	sbatch --array=300 --begin=now+30hours -J '54'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-4' $i
+	sbatch --array=400 --begin=now+26hours -J '54'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-4' $i
 done

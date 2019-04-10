@@ -1,66 +1,121 @@
-library(dplyr)
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/'
-p_thresh <- 1e-4
+RunEnrichR <- function(p_thresh,file_name){
+  library(dplyr)
+  resultPath <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/'
 
-#Read in annovar results
-annovarResult <- data.table::fread(paste0(resultPath,'HMGCR_int_parsed.variant_function'))
-annovarResultFilt <- dplyr::filter(annovarResult,V8 < p_thresh) %>% dplyr::select(type=V1,genes=V2,chr=V3,pos=V4,p=V8)
-annovarResultFilt$score <- (-log10(annovarResultFilt$p) / max(-log10(annovarResultFilt$p)))
-
-#Seperate according to comma
-allGenes <- annovarResultFilt$genes
-allGenes <- unlist(lapply(allGenes,function(x) strsplit(x,',',fixed = T)))
-#Remove none entries and NM entries
-removeEntries <- sapply(allGenes,function(x) grepl('NONE',x)) | sapply(allGenes,function(x) grepl('NM_',x))
-allGenes <- allGenes[!removeEntries]
-#Remove dist brackets
-allGenes <- sapply(allGenes,function(x) unlist(strsplit(x,'(',fixed = T))[1],USE.NAMES = F)
-#Remove repeating elements
-allGenes <- unique(allGenes)
-
-weights <- rep(NA,length(allGenes))
-for(i in 1:length(allGenes)){
-  curGene <- allGenes[i]
-  matchingEntries <- sapply(annovarResultFilt$genes,function(x) grepl(curGene,x))
-  lowestP <- which.min(annovarResultFilt$p[matchingEntries])
-  weights[i] <- annovarResultFilt$score[i]
+  #Read in annovar results
+  annovarResult <- data.table::fread(paste0(resultPath,file_name))
+  annovarResultFilt <- dplyr::filter(annovarResult,V8 < p_thresh) %>% dplyr::select(type=V1,genes=V2,chr=V3,pos=V4,p=V8)
+  annovarResultFilt$score <- (-log10(annovarResultFilt$p) / max(-log10(annovarResultFilt$p)))
+  
+  #Seperate according to comma
+  allGenes <- annovarResultFilt$genes
+  allGenes <- unlist(lapply(allGenes,function(x) strsplit(x,',',fixed = T)))
+  #Remove none entries and NM entries
+  removeEntries <- sapply(allGenes,function(x) grepl('NONE',x)) | sapply(allGenes,function(x) grepl('NM_',x))
+  allGenes <- allGenes[!removeEntries]
+  #Remove dist brackets
+  allGenes <- sapply(allGenes,function(x) unlist(strsplit(x,'(',fixed = T))[1],USE.NAMES = F)
+  #Remove repeating elements
+  allGenes <- unique(allGenes)
+  
+  weights <- rep(NA,length(allGenes))
+  for(i in 1:length(allGenes)){
+    curGene <- allGenes[i]
+    matchingEntries <- sapply(annovarResultFilt$genes,function(x) grepl(curGene,x))
+    lowestP <- which.min(annovarResultFilt$p[matchingEntries])
+    weights[i] <- annovarResultFilt$score[i]
+  }
+  
+  
+  gene_df <- data.frame(gene=allGenes,weights=weights)
+  #data.table::fwrite(gene_df,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/parsed_genes.txt',sep = ',',col.names = F)
+  
+  library(enrichR)
+  dbs <- c('GO_Molecular_Function_2015','Reactome_2016')
+  enrichr_results <- enrichr(gene_df,dbs)
+  
+  mol_func <- enrichr_results$GO_Molecular_Function_2015[1:5,]
+  reactome <- enrichr_results$Reactome_2016[1:5,]
+  return(list(mol_func=mol_func,reactome=reactome,gene_df=gene_df,annovarResultFilt=annovarResultFilt))
 }
 
 
-gene_df <- data.frame(gene=allGenes,weights=weights)
-data.table::fwrite(gene_df,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/parsed_genes.txt',sep = ',',col.names = F)
-
-library(enrichR)
-dbs <- c('GO_Molecular_Function_2015','Reactome_2016')
-enrichr_results <- enrichr(gene_df,dbs)
-
-mol_func <- enrichr_results$GO_Molecular_Function_2015[1:5,]
-mol_func_genes <- lapply(mol_func$Genes,function(x) unlist(strsplit(x,';')))
-mol_func$Term <- sapply(mol_func$Term,function(x) gsub(x = x,pattern = ' (',replacement = '\n(',fixed = T))
-mol_func$Term <- sapply(1:length(mol_func$Term),function(i) paste0(mol_func$Term[i],'\n','p=',signif(mol_func$P.value[i],3)))
-
-#Set up order of genes
-includedGenes <- c()
-for(i in 1:nrow(mol_func)){
-  curGenes <- mol_func_genes[[i]]
-  includedGenes <- c(includedGenes,setdiff(curGenes,includedGenes))
+DrawDendroGraphGOMolFunc <- function(data,gene_df,annovarResultFilt){
+  data_genes <- lapply(data$Genes,function(x) unlist(strsplit(x,';')))
+  data$Term <- sapply(data$Term,function(x) gsub(x = x,pattern = ' (',replacement = '\n(',fixed = T))
+  data$Term <- sapply(1:length(data$Term),function(i) paste0(data$Term[i],'\n','p=',signif(data$P.value[i],3)))
+  
+  #Set up order of genes
+  includedGenes <- c()
+  for(i in 1:nrow(data)){
+    curGenes <- data_genes[[i]]
+    includedGenes <- c(includedGenes,setdiff(curGenes,includedGenes))
+  }
+  includedGenes <- sapply(includedGenes,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')'))
+  df <- data.frame(genes=factor(includedGenes,levels = rev(includedGenes)))
+  for(i in 1:nrow(data)){
+    curGo <- data$Term[i]
+    curGene <- data_genes[[i]]
+    geneInclVector <- ifelse(includedGenes %in% sapply(curGene,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')')),'T','F')
+    curDf <- as.data.frame(geneInclVector)
+    colnames(curDf) <- curGo
+    df <- cbind(df,curDf)
+  }
+  
+  library(ggplot2); library(reshape2)
+  melted_df <- melt(df, id.var = 'genes')
+  p <- ggplot(melted_df, aes(variable, genes)) + geom_tile(aes(fill = value),
+                                                            colour = "white",show.legend = F) + scale_fill_manual(values=c("grey", "red")) + 
+    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14),axis.text.y = element_text(size=12)) + xlab('GO Molecular Process') + ylab('Gene')
+  return(p)
 }
-includedGenes <- sapply(includedGenes,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')'))
-mol_func_df <- data.frame(genes=factor(includedGenes,levels = rev(includedGenes)))
-for(i in 1:nrow(mol_func)){
-  curGo <- mol_func$Term[i]
-  curGene <- mol_func_genes[[i]]
-  geneInclVector <- ifelse(includedGenes %in% sapply(curGene,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')')),'T','F')
-  curDf <- as.data.frame(geneInclVector)
-  colnames(curDf) <- curGo
-  mol_func_df <- cbind(mol_func_df,curDf)
+DrawDendroGraphReactome<- function(data,gene_df,annovarResultFilt){
+  data_genes <- lapply(data$Genes,function(x) unlist(strsplit(x,';')))
+  data$Term <- sapply(data$Term,function(x) gsub(x = x,pattern = ' (',replacement = '\n(',fixed = T))
+  data$Term <- sapply(1:length(data$Term),function(i) paste0(data$Term[i],'\n','p=',signif(data$P.value[i],3)))
+  
+  #Set up order of genes
+  includedGenes <- c()
+  for(i in 1:nrow(data)){
+    curGenes <- data_genes[[i]]
+    includedGenes <- c(includedGenes,setdiff(curGenes,includedGenes))
+  }
+  includedGenes <- sapply(includedGenes,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')'))
+  df <- data.frame(genes=factor(includedGenes,levels = rev(includedGenes)))
+  for(i in 1:nrow(data)){
+    curGo <- data$Term[i]
+    curGo <- unlist(strsplit(curGo,split = '_',fixed = T))[1]
+    curGo <- gsub(pattern = 'of',replacement = 'of\n',x = curGo,fixed = T)
+    curGo <- gsub(pattern = 'and',replacement = 'and\n',x = curGo,fixed=T)
+    curGo <- gsub(pattern = ' in ',replacement = ' in\n',x = curGo,fixed = T)
+    curGo <- gsub(pattern = ' by ',replacement = ' by\n',x = curGo,fixed = T)
+    curGo <- gsub(pattern = ' causes ',replacement = ' causes\n',x = curGo,fixed = T)
+    
+    curGene <- data_genes[[i]]
+    geneInclVector <- ifelse(includedGenes %in% sapply(curGene,function(x) paste0(x,' (p=',as.character(signif(10^(-1*gene_df$weights[which(gene_df$gene==x)]*max(-log10(annovarResultFilt$p))),3)),')')),'T','F')
+    curDf <- as.data.frame(geneInclVector)
+    colnames(curDf) <- curGo
+    df <- cbind(df,curDf)
+  }
+  
+  library(ggplot2); library(reshape2)
+  melted_df <- melt(df, id.var = 'genes')
+  p <- ggplot(melted_df, aes(variable, genes)) + geom_tile(aes(fill = value),
+                                                           colour = "white",show.legend = F) + scale_fill_manual(values=c("grey", "red")) + 
+    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14),axis.text.y = element_text(size=12)) + xlab('Reactome Pathway') + ylab('Gene')
+  return(p)
 }
 
-library(ggplot2); library(reshape2)
-melted_mol_func <- melt(mol_func_df, id.var = 'genes')
-ggplot(melted_mol_func, aes(variable, genes)) + geom_tile(aes(fill = value),
-                                                colour = "white",show.legend = F) + scale_fill_manual(values=c("grey", "red")) + 
-  theme(axis.text.x = element_text(size = 12,angle = 55,hjust = 1),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14),axis.text.y = element_text(size=12)) + xlab('GO Molecular Process') + ylab('Gene')
+
+
+HMGCR_res <- RunEnrichR(1e-4,'HMGCR_int_parsed.variant_function')
+HMGCR_mol_func <- DrawDendroGraphGOMolFunc(HMGCR_res$mol_func,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
+HMGCR_reactome <- DrawDendroGraphReactome(HMGCR_res$reactome,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
+
+PCSK9_res <- RunEnrichR(1e-4,'PCSK9_int_parsed.variant_function')
+PCSK9_mol_func <- DrawDendroGraphGOMolFunc(PCSK9_res$mol_func,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
+PCSK9_reactome <- DrawDendroGraphReactome(PCSK9_res$reactome,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
+
 # ff <- factor(as.matrix(mol_func_df[,2:ncol(mol_func_df)]),
 #              levels = c('T','F'),
 #              labels = c('T','F'))

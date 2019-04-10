@@ -1,0 +1,9 @@
+for i in '1:500' '501:1000' '1001:1500' '1501:2000'
+do
+	#sbatch --array=50,100,200,300,400 -J 'P56'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '5e-6' $i
+	#sbatch --array=50,100,200,300,400 -J 'P15'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '1e-5' $i
+	#sbatch --array=50,100,200,300,400 -J 'P35'$i ./submit_perm_pheno_predict_from_random_forest_bsu_gpu '3e-5' $i
+	#sbatch --array=50,100,200,300,400 -J 'P55'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-5' $i
+	#sbatch --array=50,100,200,300,400 --begin=now+120minutes -J 'P57'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '5e-7' $i
+	sbatch --array=50,100,200,300,400 --begin=now+270minutes -J 'P14'$i ./submit_perm_pheno_predict_from_random_forest_bsu_cpu '1e-4' $i
+done

@@ -2,7 +2,9 @@ library(dplyr)
 library(dbplyr)
 library(data.table)
 library(RSQLite)
-interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
+#interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
+interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/PCSK9_LDL_known.txt'
+
 interaction_results <- data.table::fread(interaction_path)
 #Filter variants based on threshold
 interaction_results <- dplyr::filter(interaction_results,p_int < 1e-2) %>% dplyr::arrange(p_int)
@@ -23,5 +25,6 @@ chr_pos <- cbind(chr_pos,data.frame(position2=chr_pos$position))
 output <- cbind(chr_pos,dplyr::select(interaction_results,alleleA,alleleB,p_int))
 output$p_int <- as.character(output$p_int)
 
-data.table::fwrite(output,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/HMGCR_int_parsed',col.names = F,sep='\t')
+#data.table::fwrite(output,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/HMGCR_int_parsed',col.names = F,sep='\t')
+data.table::fwrite(output,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/PCSK9_int_parsed',col.names = F,sep='\t')
 
