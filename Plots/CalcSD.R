@@ -14,8 +14,8 @@ CalcSD <- function(path){
   return(sdBetas)
 }
 resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-node_size <- seq(10000,40000,10000)
-thresh <- c('5e-6','1e-5','3e-5','5e-5')
+node_size <- c(1000,2500,5000,10000,20000,30000,40000)
+thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 n_cores <- 10

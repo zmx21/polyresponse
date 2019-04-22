@@ -47,9 +47,10 @@ CompareBetaPerm <- function(perm_results,tree){
   return(rse)
 }
 #Get treatment effects for all trees within random forest and collapse.
-CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
+CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm,chunks){
+  chunks <- as.numeric(strsplit(chunks,':')[[1]][1]):as.numeric(strsplit(chunks,':')[[1]][2])
   if(perm=='Geno'){
-    rse <- pbmclapply(1:2000,function(i){
+    rse <- pbmclapply(chunks,function(i){
       #Perm ordering is different
       #find all individual trees in random forest
       treePaths <- dir(paste0(resultPath,suffix))
@@ -66,13 +67,13 @@ CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
     training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
                                              readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
     testing_set <- training_testing_set$outofbag
-    rse <- pbmclapply(1:2000,function(i){
+    rse <- pbmclapply(chunks,function(i){
       test_tree <- readRDS(paste0(resultPath,suffix,'tree',i,'.rds'))
       CompareBeta(testing_set,test_tree$bootstrapPartyTree)$rse
     },mc.cores = n_cores,ignore.interactive = T)
     return(rse)
   }else{
-    rse <- pbmclapply(1:2000,function(i){
+    rse <- pbmclapply(chunks,function(i){
       #Precalculated list of permuted predictions should be saved (saved by PermutedPrediction.R)
       perm_result <- readRDS(paste0(resultPath,suffix,'prediction_betas_pheno_perm/testing_main_effects_tree',i,'.rds'))
       test_tree <- readRDS(paste0(resultPath,suffix,'tree',i,'.rds'))$bootstrapPartyTree
@@ -85,21 +86,28 @@ CalculateBetaError <- function(resultPath,suffix,p_thresh,n_cores,perm){
 #MAIN FUNCTION. If non-permuted testing set is to be used, calculation is on the fly. 
 #If permuted set to be used, precalculated list of permuted predictions should be saved (saved by PermutedPrediction.R)
 
-RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm){
+RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm,chunks='1:2000'){
+  file_suffix <- ''
+  if(chunks != '1:2000'){
+    file_suffix <- paste0('_',strsplit(chunks,':')[[1]][1],'_',strsplit(chunks,':')[[1]][2])
+  }
+  
   if(perm=='None'){
-    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm)
-    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err.rds'))
+    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm,chunks)
+    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err',file_suffix,'.rds'))
   }else if(perm == 'Geno'){
-    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm)
-    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_perm.rds'))
+    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm,chunks)
+    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_perm',file_suffix,'.rds'))
   }else{
-    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm)
-    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm.rds'))
+    betaErr <- CalculateBetaError(resultPath,suffix,p_thresh,n_cores,perm,chunks)
+    saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm',file_suffix,'.rds'))
   }
 }
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs11206510_rs2479409_rs2149041_rs2479394_rs10888897_rs7552841_rs562556_LDLdirect/'
-node_size <- c(5000,10000,20000,30000,40000)
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+node_size=c(1000,2500)
 thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
+#node_size <- c(1000,2500,5000,10000,20000,30000,40000)
+#thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
 n_cores <- 16
@@ -107,6 +115,11 @@ n_cores <- 16
 lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None'))
 # lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Geno'))
 lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno'))
+
+#lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno','1:500'))
+#lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno','501:1000'))
+#lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno','1001:1500'))
+#lapply(1:nrow(comb),function(i) RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno','1501:2000'))
 
 
 #Plots comparing training and testing set treatment effects

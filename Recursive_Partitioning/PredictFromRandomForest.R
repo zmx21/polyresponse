@@ -33,6 +33,7 @@ GeneratePrediction <- function(tree,genotypeMatrix,testingSetSamples){
 #Runs predictions of testing set samples
 PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
   system(paste0('mkdir -p ',randomForestPath,'/prediction_betas/'))
+  print('Made Directory')
   #find all individual trees in random forest
   treePaths <- dir(randomForestPath)
   treePaths <- treePaths[sapply(treePaths,function(x) grepl('tree',x))]
@@ -43,6 +44,7 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
   #Calculate beta coeff for each sample for each tree
   trash <- pbmclapply(1:2000,function(k){
   #trash <- lapply(1:2000,function(k){
+    #print(k)
     treeObj <- readRDS(treePaths[k])
     tree <- treeObj$bootstrapPartyTree
     saveRDS(GeneratePrediction(tree,genotypeMatrix,testingSetSamples),paste0(randomForestPath,'prediction_betas/','tree',k,'.rds'))
@@ -53,18 +55,19 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
 #MAIN FUNCTION
 RunPredictionFromRF <- function(resultPath,suffix,p_thresh,n_cores){
   data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
+  print('Loaded Data')
   training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
                                            readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
   testing_set <- training_testing_set$outofbag
-  invisible(sapply(paste0(resultPath,suffix),function(x) PredictFromRF(testing_set,x,n_cores)))
+  PredictFromRF(testing_set,paste0(resultPath,suffix),n_cores)
 }
 args=(commandArgs(TRUE))
 node_size <- as.numeric(args[[1]])
 thresh <- args[[2]]
 n_cores <- as.numeric(args[[3]])
 
-#node_size <- 40000
-#thresh <- '1e-5'
+#node_size <- 10000
+#thresh <- '7e-5'
 #n_cores <- 16
 
 print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))

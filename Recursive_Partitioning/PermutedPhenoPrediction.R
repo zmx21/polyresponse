@@ -88,8 +88,8 @@ tree_chunks <- args[[4]]
 # n_cores <- 1
 # tree_chunks <- '1:1'
 print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks))
-#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
 #resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect/'
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs11206510_rs2479409_rs2149041_rs2479394_rs10888897_rs7552841_rs562556_LDLdirect/'
+#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs11206510_rs2479409_rs2149041_rs2479394_rs10888897_rs7552841_rs562556_LDLdirect/'
 
 RunPermutedPhenoPrediction(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores,tree_chunks)

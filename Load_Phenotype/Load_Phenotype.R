@@ -1,9 +1,13 @@
 #Load phenotype table, according to filters and covariates specified.
 library(dplyr)
-LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,med){
+LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,med,verbose=F,excl=c()){
   #Load phenotype table
   samplePhenoTbl <- data.table::fread(paste0(path,sample_file_prefix,'.csv'),
                                       select = c('UKB_genetic_ID','euro','lipdbin',phenotype,cov_names))
+  if(verbose){
+    print(paste0('Raw Samples ',nrow(samplePhenoTbl)))
+    print(paste0('Euro Samples',nrow(dplyr::filter(samplePhenoTbl,euro==1))))
+  }
   
   if(med != 1 & med != 0){
     stop('Please specify med')
@@ -19,7 +23,9 @@ LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,m
   if(length(cov_names)>0){
     covariates <- dplyr::select(samplePhenoTbl,cov_names)
     #Remove samples with no phenotype or cov measure.
-    samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype,cov_names)),1,function(x) any(is.na(x)))
+    #Keep missing rows for cov not included in analysis
+    cov_names_analysis <- setdiff(cov_names,excl)
+    samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype,cov_names_analysis)),1,function(x) any(is.na(x)))
     
   }else{
     covariates <- data.frame()
@@ -27,6 +33,7 @@ LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,m
     samplesToKeep <- !apply(subset(samplePhenoTbl,select=c(phenotype)),1,function(x) any(is.na(x)))
     
   }
+  
   #Remove samples with non-european ancestry if specified in argument.
   if(eur_only != 1 & eur_only != 0){
     stop('Please specify eur only')
@@ -52,6 +59,10 @@ LoadPhenotype <- function(path,sample_file_prefix,phenotype,cov_names,eur_only,m
       }
     }
   }
+  if(verbose){
+    print(paste0('Non Missing Covariates: ',length(phenotypes)))
+  }
   
-  return(list(phenotypes=phenotypes,covariates=covariates,samplesToKeep=samplesToKeep))
+  return(list(phenotypes=phenotypes,covariates=covariates,samplesToKeep=samplesToKeep,lipdbin = samplePhenoTbl$lipdbin[samplesToKeep]))
 }
+

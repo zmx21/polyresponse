@@ -4,13 +4,33 @@ library(dbplyr)
 CalcPredErrorDiffRel <- function(path){
   print(path)
   nonPermError <- readRDS(paste0(path,'beta_err.rds'))
-  permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  permErrorFiles <- dir(path,pattern = 'beta_err_pheno_perm')
+  if(length(permErrorFiles) > 1){
+    chunks <- lapply(permErrorFiles,function(x) strsplit(x,'_')[[1]])
+    chunks <- lapply(chunks,function(x) sapply(x,function(y) gsub(x = y,pattern = '.rds',replacement = '',fixed = T)))
+    chunks <- lapply(chunks,function(x) as.numeric(x)[!is.na(as.numeric(x))])
+    chunks <- lapply(chunks,function(x) x[1]:x[2])
+  }else{
+    chunks <- list(c(1:2000))
+    permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  }
   relDiff <- rep(0,1000)
+  pastPermFile <- 0
 
   numSubGroup <- 0
   for(i in 1:length(nonPermError)){
     curNonPerm <- nonPermError[[i]]
-    curPerm <- permError[[i]]
+    if(length(permErrorFiles) > 1){
+      curPermFile <- which(sapply(chunks,function(x) i%in%x))
+      if(curPermFile != pastPermFile){
+        permError <- readRDS(paste0(path,permErrorFiles[curPermFile]))
+      }
+      pastPermFile <- curPermFile
+      permIndex <- i - min(chunks[[curPermFile]]) + 1
+    }else{
+      permIndex <- i
+    }
+    curPerm <- permError[[permIndex]]
     curDiff <- sapply(curPerm,function(x) sum((curNonPerm - x) / curNonPerm))
     relDiff <- relDiff + curDiff
     numSubGroup <- numSubGroup + length(curNonPerm)
@@ -20,14 +40,35 @@ CalcPredErrorDiffRel <- function(path){
 CalcPredErrorDiffRelPop <- function(path){
   print(path)
   nonPermError <- readRDS(paste0(path,'beta_err.rds'))
-  permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  permErrorFiles <- dir(path,pattern = 'beta_err_pheno_perm')
+  if(length(permErrorFiles) > 1){
+    chunks <- lapply(permErrorFiles,function(x) strsplit(x,'_')[[1]])
+    chunks <- lapply(chunks,function(x) sapply(x,function(y) gsub(x = y,pattern = '.rds',replacement = '',fixed = T)))
+    chunks <- lapply(chunks,function(x) as.numeric(x)[!is.na(as.numeric(x))])
+    chunks <- lapply(chunks,function(x) x[1]:x[2])
+  }else{
+    chunks <- list(c(1:2000))
+    permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  }
+  
   relDiff <- rep(0,1000)
   norm <- 0
   
   numSubGroup <- 0
+  pastPermFile <- 0
   for(i in 1:length(nonPermError)){
     curNonPerm <- nonPermError[[i]]
-    curPerm <- permError[[i]]
+    if(length(permErrorFiles) > 1){
+      curPermFile <- which(sapply(chunks,function(x) i%in%x))
+      if(curPermFile != pastPermFile){
+        permError <- readRDS(paste0(path,permErrorFiles[curPermFile]))
+      }
+      pastPermFile <- curPermFile
+      permIndex <- i - min(chunks[[curPermFile]]) + 1
+    }else{
+      permIndex <- i
+    }
+    curPerm <- permError[[permIndex]]
     curDiff <- sapply(curPerm,function(x) sum(curNonPerm - x))
     curNorm <- sum(curNonPerm)
     
@@ -41,13 +82,35 @@ CalcPredErrorDiffRelPop <- function(path){
 CalcPredErrorDiffAbs <- function(path){
   print(path)
   nonPermError <- readRDS(paste0(path,'beta_err.rds'))
-  permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  
+  permErrorFiles <- dir(path,pattern = 'beta_err_pheno_perm')
+  if(length(permErrorFiles) > 1){
+    chunks <- lapply(permErrorFiles,function(x) strsplit(x,'_')[[1]])
+    chunks <- lapply(chunks,function(x) sapply(x,function(y) gsub(x = y,pattern = '.rds',replacement = '',fixed = T)))
+    chunks <- lapply(chunks,function(x) as.numeric(x)[!is.na(as.numeric(x))])
+    chunks <- lapply(chunks,function(x) x[1]:x[2])
+  }else{
+    chunks <- list(c(1:2000))
+    permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  }
+  
   diff <- rep(0,1000)
   
   numSubGroup <- 0
+  pastPermFile <- 0
   for(i in 1:length(nonPermError)){
     curNonPerm <- nonPermError[[i]]
-    curPerm <- permError[[i]]
+    if(length(permErrorFiles) > 1){
+      curPermFile <- which(sapply(chunks,function(x) i%in%x))
+      if(curPermFile != pastPermFile){
+        permError <- readRDS(paste0(path,permErrorFiles[curPermFile]))
+      }
+      pastPermFile <- curPermFile
+      permIndex <- i - min(chunks[[curPermFile]]) + 1
+    }else{
+      permIndex <- i
+    }
+    curPerm <- permError[[permIndex]]
     curDiff <- sapply(curPerm,function(x) sum((curNonPerm - x)))
     diff <- diff + curDiff
     numSubGroup <- numSubGroup + length(curNonPerm)
@@ -58,14 +121,34 @@ CalcPredErrorDiffAbs <- function(path){
 CalcPredErrorAbs <- function(path){
   print(path)
   nonPermError <- readRDS(paste0(path,'beta_err.rds'))
-  permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  permErrorFiles <- dir(path,pattern = 'beta_err_pheno_perm')
+  if(length(permErrorFiles) > 1){
+    chunks <- lapply(permErrorFiles,function(x) strsplit(x,'_')[[1]])
+    chunks <- lapply(chunks,function(x) sapply(x,function(y) gsub(x = y,pattern = '.rds',replacement = '',fixed = T)))
+    chunks <- lapply(chunks,function(x) as.numeric(x)[!is.na(as.numeric(x))])
+    chunks <- lapply(chunks,function(x) x[1]:x[2])
+  }else{
+    chunks <- list(c(1:2000))
+    permError <- readRDS(paste0(path,'beta_err_pheno_perm.rds'))
+  }
   nonPermRMSE <- 0
   permRMSE <- rep(0,1000)
   
   numSubGroup <- 0
+  pastPermFile <- 0
   for(i in 1:length(nonPermError)){
     curNonPerm <- nonPermError[[i]]
-    curPerm <- permError[[i]]
+    if(length(permErrorFiles) > 1){
+      curPermFile <- which(sapply(chunks,function(x) i%in%x))
+      if(curPermFile != pastPermFile){
+        permError <- readRDS(paste0(path,permErrorFiles[curPermFile]))
+      }
+      pastPermFile <- curPermFile
+      permIndex <- i - min(chunks[[curPermFile]]) + 1
+    }else{
+      permIndex <- i
+    }
+    curPerm <- permError[[permIndex]]
     numSubGroup <- numSubGroup + length(curNonPerm)
     permRMSE <- permRMSE + sapply(curPerm,function(x) sum(x))
     nonPermRMSE <-nonPermRMSE + sum(curNonPerm)
@@ -76,21 +159,19 @@ CalcPredErrorAbs <- function(path){
 
 
 resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-node_size <- c(5000,10000,20000,30000,40000)
+node_size <- c(1000,2500,5000,10000,20000,30000,40000)
 thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 comb <- expand.grid(node_size,thresh)
 colnames(comb) <- c('node_size','thresh')
-comb <- comb[-1,]
 
 pred_error_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
-
-
+                                                                   
 print('Calc abs diff')
-pred_diff_abs <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
+pred_diff_abs <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffAbs(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 print('Calc rel diff')
-pred_diff_rel <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
+pred_diff_rel <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRel(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 print('Calc rel pop diff')
-pred_diff_rel_pop <- pbmclapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')),mc.cores = 12)
+pred_diff_rel_pop <- lapply(1:nrow(comb),function(i) CalcPredErrorDiffRelPop(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/')))
 
 
 pred_diff_rel_df <- data.frame(p_thresh=numeric(),node_size=numeric(),diff=numeric(),sd=numeric())
@@ -132,12 +213,12 @@ p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(no
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) + 
   geom_line(position=pd)+
   geom_point(position=pd)+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) + 
-  ylab('Relative Difference in RMSE\n between True and Permuted') + 
+  xlab(expression(paste("Interaction Threshold,","-log"[10],"(p-value)"))) + 
+  ylab('Relative Difference in RMSE\n between True and Permuted Phenotype') + 
   labs(colour='Minimum\nNode Size')+
   scale_y_continuous(breaks=seq(-10,0,2),limits=c(-10,0))+
   scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) +
-  theme(text = element_text(size=14))
+  theme(text = element_text(size=14,family = 'Myriad Pro'))
 
 
 pd=position_dodge(0)
