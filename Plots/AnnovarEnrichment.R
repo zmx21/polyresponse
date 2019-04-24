@@ -1,6 +1,6 @@
 RunEnrichR <- function(p_thresh,file_name){
   library(dplyr)
-  resultPath <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/'
+  resultPath <- '/media/sf_D_DRIVE/bsu_scratch/Interaction_Data/annovar/'
 
   #Read in annovar results
   annovarResult <- data.table::fread(paste0(resultPath,file_name))
@@ -65,8 +65,8 @@ DrawDendroGraphGOMolFunc <- function(data,gene_df,annovarResultFilt){
   library(ggplot2); library(reshape2)
   melted_df <- melt(df, id.var = 'genes')
   p <- ggplot(melted_df, aes(variable, genes)) + geom_tile(aes(fill = value),
-                                                            colour = "white",show.legend = F) + scale_fill_manual(values=c("grey", "red")) + 
-    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14),axis.text.y = element_text(size=12)) + xlab('GO Molecular Process') + ylab('Gene')
+                                                            colour = "black",show.legend = F,size=1.1) + scale_fill_manual(values=c("grey", "red")) + 
+    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1,family='Myriad Pro'),axis.title.x = element_text(size=14,family='Myriad Pro'),axis.title.y = element_text(size=14,family='Myriad Pro'),axis.text.y = element_text(size=12,family='Myriad Pro')) + xlab('') + ylab('Gene\n')
   return(p)
 }
 DrawDendroGraphReactome<- function(data,gene_df,annovarResultFilt){
@@ -102,7 +102,7 @@ DrawDendroGraphReactome<- function(data,gene_df,annovarResultFilt){
   melted_df <- melt(df, id.var = 'genes')
   p <- ggplot(melted_df, aes(variable, genes)) + geom_tile(aes(fill = value),
                                                            colour = "white",show.legend = F) + scale_fill_manual(values=c("grey", "red")) + 
-    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14),axis.text.y = element_text(size=12)) + xlab('Reactome Pathway') + ylab('Gene')
+    theme(axis.text.x = element_text(size = 12,angle = 60,hjust = 1,vjust=1,family='Myriad Pro'),axis.title.x = element_text(size=14,family='Myriad Pro'),axis.title.y = element_text(size=14,family='Myriad Pro'),axis.text.y = element_text(size=12,family='Myriad Pro')) + xlab('Reactome Pathway') + ylab('Gene')
   return(p)
 }
 
@@ -115,6 +115,7 @@ HMGCR_reactome <- DrawDendroGraphReactome(HMGCR_res$reactome,HMGCR_res$gene_df,H
 PCSK9_res <- RunEnrichR(1e-4,'PCSK9_int_parsed.variant_function')
 PCSK9_mol_func <- DrawDendroGraphGOMolFunc(PCSK9_res$mol_func,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
 PCSK9_reactome <- DrawDendroGraphReactome(PCSK9_res$reactome,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
+save.image(file='~/bsu_scratch/LDL_Project_Data/int_variant_anno.RData')
 
 # ff <- factor(as.matrix(mol_func_df[,2:ncol(mol_func_df)]),
 #              levels = c('T','F'),

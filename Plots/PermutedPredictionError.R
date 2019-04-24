@@ -213,12 +213,12 @@ p <- ggplot(pred_diff_relpop_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(no
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) + 
   geom_line(position=pd)+
   geom_point(position=pd)+
-  xlab(expression(paste("Interaction Threshold,","-log"[10],"(p-value)"))) + 
-  ylab('Relative Difference in RMSE\n between True and Permuted Phenotype') + 
+  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) + 
+  ylab('Relative Difference in RMSE\n between True and Permuted') + 
   labs(colour='Minimum\nNode Size')+
   scale_y_continuous(breaks=seq(-10,0,2),limits=c(-10,0))+
   scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) +
-  theme(text = element_text(size=14,family = 'Myriad Pro'))
+  theme(text = element_text(size=14))
 
 
 pd=position_dodge(0)
