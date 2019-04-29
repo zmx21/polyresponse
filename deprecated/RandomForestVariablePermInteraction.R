@@ -1,3 +1,9 @@
+####################################################################################
+#Creates random forest, dependent on the implementation of decision tree in InteractionTree.R
+#Input: As listed in message below (line 70)
+#Output: .rds file for each tree.
+####################################################################################
+
 source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
 source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
 source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
@@ -7,12 +13,12 @@ library(partykit)
 library(parallel)
 library(RSQLite)
 library(dplyr)
-CreateRandomForestPermInteraction <- function(data,testing_set,sample_size,n_bootstrap,n_features,tree_min_size,outpath,n_cores,perm_n){
-  system(paste0('mkdir -p ',outpath,'/var_perm_interaction/'))
-  #vector of all sample ids
-  samples <- 1:nrow(data$dosageMatrix)
+
+CreateRandomForestPermInteraction <- function(data,testing_set,
+                                              n_bootstrap,n_features,tree_min_size,outpath,
+                                              n_cores,data_path,p_val_thresh){
   
-  #Construct random forest
+  #Construct rf with same parameters as non-permuted trees
   if(grepl(':',n_bootstrap)){
     n_bootstrap <- unlist(strsplit(n_bootstrap,':'))
     chunks <- as.numeric(n_bootstrap[1]):as.numeric(n_bootstrap[2])
@@ -20,11 +26,12 @@ CreateRandomForestPermInteraction <- function(data,testing_set,sample_size,n_boo
     chunks <- 1:as.numeric(n_bootstrap)
   }
   res <- pbmclapply(chunks,function(i) {
-  #res <- lapply(chunks,function(i){
+    #res <- lapply(chunks,function(i){
     flag <- T
     while(flag){
-      bootstrapIndex <- samples[sample(1:length(samples),size = sample_size,replace = T)]
-      outofbagIndex <- setdiff(samples,bootstrapIndex)
+      curTree <- readRDS(paste0(data_path,'0.75_',tree_min_size,'_',p_val_thresh,'/tree',i,'.rds'))
+      bootstrapIndex <- curTree$bootstrapIndex
+      outofbagIndex <- curTree$outofbagIndex
       
       #Extract the boostrap sample and out of bag sample.
       currentSubsample <- ExtractSubSample(data,bootstrapIndex,outofbagIndex)
@@ -51,27 +58,28 @@ CreateRandomForestPermInteraction <- function(data,testing_set,sample_size,n_boo
         flag <- F
       }
     }
-    #Get Total interaction of current tree.
+    #Get Total interaction of random tree
     CalculateTotalInteraction(as.data.frame(testing_set$dosageMatrix),bootstrapPartyTree,testing_set$dosageTarget,
                               testing_set$phenotypes,testing_set$covariates)
   },mc.cores = n_cores,ignore.interactive = T)
   #})
-  saveRDS(res,paste0(outpath,'/tree_interaction/interactions.rds'))
+  saveRDS(res,paste0(outpath,'interactions.rds'))
 }
 #Parse arguments
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  interaction_path <- '~/parsed_interaction/CACNA1D_sbp.txt'
-  p_val_thresh <-  '1e-5'
-  targetRS <-  'rs3821843,rs7340705,rs113210396,rs312487,rs11719824,rs3774530,rs3821856'
-  phenotype <- 'sbp'
-  outpath <- '~/bsu_scratch/Random_Forest/Variable_Perm/'
+  interaction_path <- '~/bsu_scratch/LDL_Project_Data/Interaction_Data/HMGCR_LDL_known.txt'
+  p_val_thresh <-  '5e-5'
+  targetRS <-  'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
+  phenotype <- 'LDLdirect'
+  outpath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/Variable_Perm_Interaction/'
   n_bootstrap <- '1:1'
   n_features <- '0.75'
   min_node_size <- 10000
   n_cores <- 1
   perm_n <- 1
+  data_path <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
   targetRS <- unlist(strsplit(targetRS,split = ','))
   outpath <- paste0(outpath,paste(targetRS,collapse = '_'),'_',phenotype,'/')
   system(paste0('mkdir -p ',outpath))
@@ -81,7 +89,7 @@ if(length(args)==0){
   system(paste0('mkdir -p ',outpath,suffix,'/perm',perm_n))
   
   
-}else if (length(args) != 10){
+}else if (length(args) != 11){
   stop("You need to supply:\n",
        "# 1: Interaction result path\n",
        '# 2: Interaction P-value threshold\n',
@@ -93,6 +101,7 @@ if(length(args)==0){
        "# 8: Minimum node size\n",
        "# 9: Number of cores",
        "#10: Perm Number",
+       '#11: Data Path',
        "Exiting...", call.=FALSE)
 }else{
   print('All Arguments Supplied')
@@ -105,8 +114,9 @@ if(length(args)==0){
            "# 7: Number of random features:",
            "# 8: Minimum node size:",
            "# 9: Number of cores",
-           "#10: Perm Number")
-  variables <- c('interaction_path','p_val_thresh','targetRS','phenotype','outpath','n_bootstrap','n_features','min_node_size','n_cores','perm_n')
+           "#10: Perm Number",
+           "#11: Data Path")
+  variables <- c('interaction_path','p_val_thresh','targetRS','phenotype','outpath','n_bootstrap','n_features','min_node_size','n_cores','perm_n','data_path')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
@@ -121,49 +131,74 @@ if(length(args)==0){
   system(paste0('mkdir -p ',outpath,suffix,'/'))
   system(paste0('mkdir -p ',outpath,suffix,'/perm',perm_n))
 }
+
 #Check if data has been loaded already, and already saved
 if(paste0('dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds') %in% dir(paste0(outpath,'/dosage_matrix/'))){
-  data <- readRDS(paste0('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
+  print('loading existing dosage matrix')
+  data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
   data$dosageMatrix <- readRDS(paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
 }else{
-  data <- readRDS(paste0('~/bsu_scratch/Random_Forest/rs3821843_rs7340705_rs113210396_rs312487_rs11719824_rs3774530_rs3821856_sbp/','data_p_',as.numeric(p_val_thresh),'.rds'))
-  true_predictors <- colnames(data$dosageMatrix)
-  n_predictors <- length(true_predictors)
-  interaction_results <- data.table::fread(interaction_path)
-  #choose 2000 random SNPs
-  interaction_results <- interaction_results[sample(1:nrow(interaction_results),size = 2000),]
-  #Connect to rsid annotation database. 
-  anno_sql_name<- "all_snp_stats.sqlite"
-  path <- '~/bsu_scratch/SQL/'
-  curwd <- getwd()
-  setwd(path)
-  anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
-  anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
-  #Get all rsids meeting criteria
-  true_anno <- anno_db %>% dplyr::filter(rsid %in% true_predictors) %>% collect() %>% dplyr::select(rsid,minor_allele_frequency)
-  anno <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
-  dbDisconnect(anno_con)
-  setwd(curwd)
-  interaction_results <- interaction_results %>% dplyr::left_join(anno,by=c('rsid'='rsid')) %>% dplyr::filter(as.numeric(info) > 0.5)
-  
-  #Find matching pred with similar MAF
-  rand_pred <- c()
-  for(i in 1:nrow(true_anno)){
-    currentRS <- true_anno$rsid[i]
-    currentMAF <- as.numeric(true_anno$minor_allele_frequency[i])
-    closestRS <- interaction_results$rsid[which.min(abs(currentMAF - as.numeric(interaction_results$minor_allele_frequency)))]
-    rand_pred <- c(rand_pred,closestRS)
+  flag <- T
+  while(flag){
+    print('creating dosage matrix with random SNPs')
+    data <- readRDS(paste0(data_path,'data_p_',as.numeric(p_val_thresh),'.rds'))
+    true_predictors <- colnames(data$dosageMatrix)
+    n_predictors <- length(true_predictors)
+    interaction_results <- data.table::fread(interaction_path)
+    #choose 2000 random SNPs
+    interaction_results <- interaction_results[sample(1:nrow(interaction_results),size = 2000),]
+    #Connect to rsid annotation database. 
+    anno_sql_name<- "all_snp_stats.sqlite"
+    path <- '~/bsu_scratch/SQL/'
+    curwd <- getwd()
+    setwd(path)
+    anno_con <- RSQLite::dbConnect(SQLite(), dbname = anno_sql_name)
+    anno_db <- dplyr::tbl(anno_con,'all_snp_stats')
+    #Get all rsids meeting criteria
+    true_anno <- anno_db %>% dplyr::filter(rsid %in% true_predictors) %>% collect() %>% dplyr::select(rsid,minor_allele_frequency)
+    anno <- anno_db %>% dplyr::filter(rsid %in% interaction_results$rsid) %>% collect()
+    dbDisconnect(anno_con)
+    setwd(curwd)
+    interaction_results <- interaction_results %>% dplyr::left_join(anno,by=c('rsid'='rsid')) %>% dplyr::filter(as.numeric(info) > 0.5)
+    
+    #Find matching pred with similar MAF
+    rand_pred <- c()
+    for(i in 1:nrow(true_anno)){
+      currentRS <- true_anno$rsid[i]
+      currentMAF <- as.numeric(true_anno$minor_allele_frequency[i])
+      closestRS <- interaction_results$rsid[which.min(abs(currentMAF - as.numeric(interaction_results$minor_allele_frequency)))]
+      rand_pred <- c(rand_pred,closestRS)
+    }
+    path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+    bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
+    randDosageMatrix <- tryCatch({
+      t(as.matrix(LoadBgen(path,bgen_file_prefix,rand_pred)))[rownames(data$dosageMatrix),]
+    }, error = function(e) {
+      print('dim mismatch err')
+    })
+    if(is.matrix(randDosageMatrix)){
+      flag <- F
+    }else{
+      print('dim mismatch')
+      next
+    }
+    saveRDS(randDosageMatrix,paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
+    data$dosageMatrix <- randDosageMatrix
   }
-  path <-  '/mrc-bsu/scratch/zmx21/UKB_Data/'
-  bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  
-  randDosageMatrix <- t(as.matrix(LoadBgen(path,bgen_file_prefix,rand_pred)))[rownames(data$dosageMatrix),]
-  saveRDS(randDosageMatrix,paste0(outpath,'/dosage_matrix/','dosage_matrix_perm_',as.numeric(perm_n),'_p_',as.numeric(p_val_thresh),'.rds'))
-  data$dosageMatrix <- randDosageMatrix
 }
 #Extract training set.
-training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/UKB_Data/training_set.rds'),readRDS('~/bsu_scratch/UKB_Data/test_set.rds'))
+training_testing_set <- ExtractSubSample(data,
+                                         readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
+                                         readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 training_set <- training_testing_set$bootstrap
 testing_set <- training_testing_set$outofbag
 #Create random forest
-CreateRandomForestPermInteraction(training_set,testing_set,floor(nrow(training_set$dosageMatrix)*(2/3)),n_bootstrap,n_features,as.numeric(min_node_size),paste0(outpath,suffix,'/perm',perm_n,'/'),as.numeric(n_cores))
+CreateRandomForestPermInteraction(data = training_set,
+                                  testing_set = testing_set,
+                                  n_bootstrap = n_bootstrap,
+                                  n_features = n_features,
+                                  tree_min_size = as.numeric(min_node_size),
+                                  outpath = paste0(outpath,suffix,'/perm',perm_n,'/'),
+                                  n_cores = as.numeric(n_cores),
+                                  data_path = data_path,
+                                  p_val_thresh = p_val_thresh)

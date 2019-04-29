@@ -113,7 +113,7 @@ IterativePruning <- function(gene_name,phenotype,upstream_dist,downstream_dist,p
 
 #Called by CalcMeanEffectGeneScore, constructs a linear model with/without covariate
 #to measure genotype-phenotype beta parameter and significance. 
-LinearFitGeneScore <- function(dosageSubMatrix,phenotypes,covariates){
+LinearFitGeneScore <- function(dosageSubMatrix,phenotypes,covariates,verbose=F){
   #Create model matrix, with main and interaction effects of two SNPs. 
   if(ncol(covariates) > 0){
     mdlMat <- cbind('Intercept' = rep(1,length(dosageSubMatrix)),'gene_score' = dosageSubMatrix,covariates)
@@ -122,14 +122,18 @@ LinearFitGeneScore <- function(dosageSubMatrix,phenotypes,covariates){
   }
   
   fit <- RcppEigen::fastLm(y = phenotypes,X = mdlMat)
-  #Return coefficient and significance of interaction term
-  results <- c(summary(fit)$coefficients[2,c(1,4)],summary(fit)$r.squared)
-  names(results) <- c('coeff','p','rsq')
-  return(results)
+  if(!verbose){
+    #Return coefficient and significance of interaction term
+    results <- c(summary(fit)$coefficients[2,c(1,4)],summary(fit)$r.squared)
+    names(results) <- c('coeff','p','rsq')
+    return(results)
+  }else{
+    return(summary(fit))
+  }
 }
 
 #Calculates mean effect of gene score with phenotype
-CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,beta_coeff,med=T,PC=5){
+CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,beta_coeff,med=T,PC=5,verbose=F){
   #Decide what columns to load based on what covariates were specificed
   if(cov!=''){
     cov_names <- unlist(strsplit(x=cov,split = ','))
@@ -152,6 +156,6 @@ CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phe
   dosageVector <- dosageVector[,samplesToKeep]
   
   dosageVector <- beta_coeff %*% dosageVector
-  fit <- LinearFitGeneScore(as.vector(dosageVector),phenotypes,covariates)
+  fit <- LinearFitGeneScore(as.vector(dosageVector),phenotypes,covariates,verbose)
   return(fit)
 }

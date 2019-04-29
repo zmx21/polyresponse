@@ -23,3 +23,5 @@ HMGCR_SNPs$`p-value` <- signif(HMGCR_SNPs$`p-value`,4)
 HMGCR_SNPs$MAF <- signif(as.numeric(HMGCR_SNPs$MAF),4)
 
 data.table::fwrite(HMGCR_SNPs[order(HMGCR_SNPs$`p-value`),],file='~/bsu_scratch/LDL_Project_Data/HMGCR_SNP_know_stats.csv',sep = ',')
+
+
