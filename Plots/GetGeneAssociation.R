@@ -22,4 +22,5 @@ mean_effect_fit <- CalcMeanEffectGeneScore(path = path,
                                            beta_coeff = beta_coeff,
                                            med=T,
                                            PC=5,
-                                           verbose=T)
+                                           verbose=T,
+                                           flip=T)

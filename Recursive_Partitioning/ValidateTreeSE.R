@@ -103,11 +103,27 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm,chunks='1:2000'){
     saveRDS(betaErr,paste0(resultPath,suffix,'beta_err_pheno_perm',file_suffix,'.rds'))
   }
 }
+# resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+# args=(commandArgs(TRUE))
+# node_size <- as.numeric(args[[1]])
+# thresh <- args[[2]]
+# n_cores <- as.numeric(args[[3]])
+# tree_chunks <- args[[4]]
+# perm_type <- args[[5]]
 resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-args=(commandArgs(TRUE))
-node_size <- as.numeric(args[[1]])
-thresh <- args[[2]]
-n_cores <- as.numeric(args[[3]])
-tree_chunks <- args[[4]]
-RunBetaErr(resultPath,paste0('0.75_',node_size,'_',as.character(thresh),'/'),as.numeric(as.character(thresh)),n_cores,'Pheno',tree_chunks)
-RunBetaErr(resultPath,paste0('0.75_',node_size,'_',as.character(thresh),'/'),as.numeric(as.character(thresh)),n_cores,'None',tree_chunks)
+node_size=c(1000,2500,5000,10000,20000,30000,40000)
+thresh <- c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
+comb <- expand.grid(node_size,thresh)
+colnames(comb) <- c('node_size','thresh')
+n_cores <- 12
+for(i in 1:nrow(comb)){
+  print(comb[i,])
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno',"1:500")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno',"501:1000")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno',"1001:1500")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'Pheno',"1501:2000")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None',"1:500")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None',"501:1000")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None',"1001:1500")
+  RunBetaErr(resultPath,paste0('0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'/'),as.numeric(as.character(comb$thresh[i])),n_cores,'None',"1501:2000")
+}

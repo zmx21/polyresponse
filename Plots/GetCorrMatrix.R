@@ -1,5 +1,7 @@
 source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
-includedSNPS <- c('rs12916','rs17238484','rs5909','rs2303152','rs10066707','rs2006760')
+#includedSNPS <- c('rs12916','rs17238484','rs5909','rs2303152','rs10066707','rs2006760')
+interactionResults <- data.table::fread('~/bsu_scratch/LDL_Project_Data/HMGCR_Interaction_Stats.csv')
+includedSNPS <- interactionResults[sapply(interactionResults$genes,function(x) grepl('IFNA',x)),]$rsid
 
 path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
 bgen_file_prefix <- 'ukb_imp_chr#_HRConly'

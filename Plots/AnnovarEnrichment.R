@@ -107,15 +107,14 @@ DrawDendroGraphReactome<- function(data,gene_df,annovarResultFilt){
 }
 
 
-
-HMGCR_res <- RunEnrichR(5e-5,'HMGCR_int_parsed.variant_function')
+HMGCR_res <- RunEnrichR(1e-5,'HMGCR_int_parsed.variant_function')
 HMGCR_mol_func <- DrawDendroGraphGOMolFunc(HMGCR_res$mol_func,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
 HMGCR_reactome <- DrawDendroGraphReactome(HMGCR_res$reactome,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
 
-PCSK9_res <- RunEnrichR(5e-5,'PCSK9_int_parsed.variant_function')
-PCSK9_mol_func <- DrawDendroGraphGOMolFunc(PCSK9_res$mol_func,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
-PCSK9_reactome <- DrawDendroGraphReactome(PCSK9_res$reactome,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
-save.image(file='~/bsu_scratch/LDL_Project_Data/int_variant_anno.RData')
+# PCSK9_res <- RunEnrichR(5e-6,'PCSK9_int_parsed.variant_function')
+# PCSK9_mol_func <- DrawDendroGraphGOMolFunc(PCSK9_res$mol_func,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
+# PCSK9_reactome <- DrawDendroGraphReactome(PCSK9_res$reactome,PCSK9_res$gene_df,PCSK9_res$annovarResultFilt)
+# save.image(file='~/bsu_scratch/LDL_Project_Data/int_variant_anno_5e-6.RData')
 
 # ff <- factor(as.matrix(mol_func_df[,2:ncol(mol_func_df)]),
 #              levels = c('T','F'),

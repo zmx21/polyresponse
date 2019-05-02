@@ -133,7 +133,7 @@ LinearFitGeneScore <- function(dosageSubMatrix,phenotypes,covariates,verbose=F){
 }
 
 #Calculates mean effect of gene score with phenotype
-CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,beta_coeff,med=T,PC=5,verbose=F){
+CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phenotype,rsid,eur_only,cov,beta_coeff,med=T,PC=5,verbose=F,flip=F){
   #Decide what columns to load based on what covariates were specificed
   if(cov!=''){
     cov_names <- unlist(strsplit(x=cov,split = ','))
@@ -155,7 +155,20 @@ CalcMeanEffectGeneScore <- function(path,sample_file_prefix,bgen_file_prefix,phe
   dosageVector <- LoadBgen(path,bgen_file_prefix,rsid)
   dosageVector <- dosageVector[,samplesToKeep]
   
-  dosageVector <- beta_coeff %*% dosageVector
+  if(!flip){
+    dosageVector <- beta_coeff %*% dosageVector
+  }else{
+    #Flip alleles such that all are LDL lowering
+    dosageTarget <- dosageVector
+    for(i in 1:nrow(dosageTarget)){
+      if(beta_coeff[i] > 0){
+        dosageTarget[i,] <- 2-dosageVector[i,]
+      }
+    }
+    dosageTarget <- as.vector(abs(beta_coeff) %*% dosageTarget)
+    dosageVector <- dosageTarget
+  }
+  
   fit <- LinearFitGeneScore(as.vector(dosageVector),phenotypes,covariates,verbose)
   return(fit)
 }
