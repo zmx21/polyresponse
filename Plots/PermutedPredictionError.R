@@ -118,7 +118,7 @@ for(i in 1:length(pred_error_abs_RMSE)){
 
 
 library(ggplot2)
-
+library(ggpubr)
 pd=position_dodge(0.1)
 p1 <- ggplot(pred_error_abs_RMSE_non_perm_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(node_size))) +
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) +
@@ -146,12 +146,12 @@ p3 <- ggplot(pred_error_abs_RMSE_df,aes(x=-1*log10(p_thresh),y=diff,colour=facto
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) +
   geom_line(position=pd)+
   geom_point(position=pd)+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
+  xlab(expression(paste0("Interaction Threshold, ","-log"[10],"(p-value)"))) +
   ylab('Absolute Difference in RMSE\n between True and Permuted') +
   labs(colour='Minimum\nNode Size') +
   scale_y_continuous(breaks=seq(-0.35,-0.05,0.1),limits=c(-0.35,-0.05))+
   scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) +
-  theme(text = element_text(size=14))
+  theme_pubr(base_size = 14,base_family = 'Myriad Pro',border = T) #+ scale_color_brewer(type='qual',palette = 'Dark2')
 
 p4 <- ggplot(pred_error_rel_non_perm_RMSE_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(node_size))) +
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) +
@@ -171,6 +171,8 @@ p5 <- ggplot(pred_error_rel_perm_RMSE_df,aes(x=-1*log10(p_thresh),y=diff,colour=
   ylab('Relative Difference in RMSE\n between True and Permuted based on Permuted') +
   labs(colour='Minimum\nNode Size') +
   theme(text = element_text(size=14))
+
+save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot.RData')
 
 # p2 <- ggplot(pred_error_abs_MAE_df,aes(x=-1*log10(p_thresh),y=diff,colour=factor(node_size))) +
 #   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd) +
@@ -259,7 +261,6 @@ p5 <- ggplot(pred_error_rel_perm_RMSE_df,aes(x=-1*log10(p_thresh),y=diff,colour=
 #   labs(colour='Minimum\nNode Size')+
 #   theme(text = element_text(size=14))
 # 
-#save.image(file='~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/pred_err_comparison_plot_new.RData')
 
 # library(ggplot2)
 # p1 <- ggplot(pred_diff_rel_df, aes(x=factor(node_size), y=diff)) +

@@ -19,8 +19,7 @@ beta_df$node_size <- factor(beta_df$node_size,levels = unique(beta_df$node_size)
 
 p = ggplot(beta_df, aes(x=beta)) +
   geom_histogram(bins=50) + ylim(0,40000) + 
-  facet_grid( node_size ~ p_thresh) + labs(x = 'Individualized Treatment Effect', y = 'Count') + 
-  theme(text = element_text(size=14,family = 'Myriad Pro'))
+  facet_grid( node_size ~ p_thresh) + labs(x = 'Individualized Treatment Effect', y = 'Count') + theme_pubr(base_size = 14,base_family = 'Myriad Pro',border = T)
 
 
 sd_df <- data.frame(p_thresh=numeric(),node_size=numeric(),sd=numeric())
@@ -38,4 +37,4 @@ sd_df$node_size <- factor(sd_df$node_size,levels = unique(sd_df$node_size))
 sd_df$sd <- signif(sd_df$sd,3)
 lab = paste0('sd = ',as.character(sapply(sd_df$sd,function(x) formatC(x,digits = 1,format = 'e'))))
 ann_df <- data.frame(p_thresh=sd_df$p_thresh,node_size = sd_df$node_size)
-p + geom_text(data = ann_df,mapping = aes(x=Inf,y=Inf,label = lab),hjust = 1,vjust=1.7,size=3.5,family='Myriad Pro') + geom_hline(color = 'white',yintercept = 0,size=1.2)
+p + geom_text(data = ann_df,mapping = aes(x=Inf,y=Inf,label = lab),hjust = 1.2,vjust=1.7,size=3.7,family='Myriad Pro') + geom_hline(color = 'white',yintercept = 0,size=1.2)

@@ -19,7 +19,7 @@
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
 #SBATCH --ntasks=12
 #! How much wallclock time will be required?
-#SBATCH --time=12:00:00
+#SBATCH --time=10-00:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -28,6 +28,7 @@
 
 #! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
 #SBATCH -p bsu-gpu
+
 #! sbatch directives end here (put any additional directives above this line)
 
 #! Notes:
@@ -122,4 +123,9 @@ fi
 echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)"
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
-Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Plots/PermutedPredictionError.R'
+min_node=$(($SLURM_ARRAY_TASK_ID * 100))
+n_cores=12
+thresh=$1
+tree_chunk=$2
+perm_type=$3
+Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/ValidateTreeSD.R' $min_node $thresh $n_cores $tree_chunk $perm_type
