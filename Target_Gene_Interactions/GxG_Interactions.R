@@ -47,8 +47,12 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Split rsid based on comma
   targetRS <- unlist(strsplit(targetRS,split = ','))
-  dosageTarget <- LoadBgen(path,bgen_file_prefix,targetRS)
 
+  #Load training set index
+  trainingSet <- readRDS(file = training_set)
+  phenotypes <- phenotypes[trainingSet]
+  covariates <- covariates[trainingSet,]
+  
   #Calculate gene score if more than 1 target SNP listed, otherwise load single SNP dosage vector.
   if(length(targetRS) < 2){
     #Load single SNP dosage vector
@@ -56,7 +60,6 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     #keep samples without missing information
     dosageTarget <- dosageTarget[,samplesToKeep]
     #keep only samples in training set
-    trainingSet <- readRDS(file = training_set)
     dosageTarget <- dosageTarget[trainingSet]
     
   }else{
@@ -65,7 +68,6 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     #keep samples without missing information
     dosageVector <- dosageVector[,samplesToKeep]
     #keep only samples in training set
-    trainingSet <- readRDS(file = training_set)
     dosageVector <- dosageVector[,trainingSet]
     
     #Calculate main effects of each individual SNP
@@ -91,7 +93,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Run chunks in parallel
   print(paste0('Calculating Interactions: ',length(chunks),' chunks'))
-  allResultsTbl <- pbmclapply(chunks,function(i) {
+  allResultsTbl <- pbmclapply(chunks,function(i) { #lapply(chunks, function(i){ 
     # i <- 1
     currentRSIdChunk <- rsIDChunks[[i]]
     dosageMatrix <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,rep(chr,length(currentRSIdChunk)))
@@ -115,6 +117,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     }
     data.table::fwrite(resultsTbl,file = paste0(path_out,'chunk',i,'.txt'),sep = '\t',col.names = T,row.names = F)
   },mc.cores = as.numeric(n_cores),ignore.interactive = T)
+  #})
 }
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
@@ -125,12 +128,12 @@ print(args)
 if(length(args)==0){
   print("No arguments supplied.")
   #supply default values
-  path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
+  path <-  '~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/'
   sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
   chr <- '5'
   phenotype = 'LDLdirect'
-  targetRS <- 'rs12916'
+  targetRS <- 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
   n_cores <- 1
   eur_only <- 1
   out_suffix <- 'test'
