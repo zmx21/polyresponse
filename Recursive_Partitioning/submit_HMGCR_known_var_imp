@@ -1,0 +1,6 @@
+#!/bin/bash 
+for p in '9e-6' '1e-5' '3e-5' '5e-5' '7e-5' '9e-5' '1e-4' 
+do
+	sbatch --array=50,100,200,300,400 -J "var"$p"m5" ./submit_var_imp $p '5e-2'
+	#sbatch --array=50,100,200,300,400 -J $p"m1" ./submit_var_imp $p '1e-2'
+done

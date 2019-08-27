@@ -1,6 +1,6 @@
 RunEnrichR <- function(p_thresh,file_name){
   library(dplyr)
-  resultPath <- '/media/sf_D_DRIVE/bsu_scratch/Interaction_Data/annovar/'
+  resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/annovar/'
 
   #Read in annovar results
   annovarResult <- data.table::fread(paste0(resultPath,file_name))
@@ -28,7 +28,7 @@ RunEnrichR <- function(p_thresh,file_name){
   
   
   gene_df <- data.frame(gene=allGenes,weights=weights)
-  #data.table::fwrite(gene_df,'~/bsu_scratch/LDL_Project_Data/Interaction_Data/annovar/parsed_genes.txt',sep = ',',col.names = F)
+  write(as.character(gene_df$gene),'~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/annovar/parsed_genes.txt',sep = '\n')
   
   library(enrichR)
   dbs <- c('GO_Molecular_Function_2015','Reactome_2016')
@@ -107,7 +107,7 @@ DrawDendroGraphReactome<- function(data,gene_df,annovarResultFilt){
 }
 
 
-HMGCR_res <- RunEnrichR(1e-5,'HMGCR_int_parsed.variant_function')
+HMGCR_res <- RunEnrichR(1e-5,'HMGCR_int_indep_parsed.variant_function')
 HMGCR_mol_func <- DrawDendroGraphGOMolFunc(HMGCR_res$mol_func,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
 HMGCR_reactome <- DrawDendroGraphReactome(HMGCR_res$reactome,HMGCR_res$gene_df,HMGCR_res$annovarResultFilt)
 

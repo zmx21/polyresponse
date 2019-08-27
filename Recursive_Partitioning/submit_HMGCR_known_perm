@@ -1,0 +1,11 @@
+for i in '1e-4' '9e-6' '8e-6' '7.5e-6' '7e-6' '6.5e-6' '6e-6' '5.5e-6' '5e-6' '4e-6' '3e-6' '9e-5' '6e-5' '7e-5' '5e-5' '4e-5' '3e-5' '2e-5' '1e-5' 
+do
+	sbatch -J $i"_perm" --array=50,100,200,300,400 ./submit_perm_predict_from_random_forest $i '1:500' '5e-2'
+	sbatch -J $i"_perm" --array=50,100,200,300,400 ./submit_perm_predict_from_random_forest $i '501:1000' '5e-2'
+	sbatch -J $i"_perm" --array=50,100,200,300,400 ./submit_perm_predict_from_random_forest $i '1001:1500' '5e-2'
+	sbatch -J $i"_perm" --array=50,100,200,300,400 ./submit_perm_predict_from_random_forest $i '1501:2000' '5e-2'
+	#sbatch -J $i"_perm" --array 100,200,300,400 ./submit_perm_predict_from_random_forest $i '1:500' '1e-2' 		
+	#sbatch -J $i"_perm" --array 100,200,300,400 ./submit_perm_predict_from_random_forest $i '501:1000' '1e-2'
+	#sbatch -J $i"_perm" --array 100,200,300,400 ./submit_perm_predict_from_random_forest $i '1001:1500' '1e-2'
+	#sbatch -J $i"_perm" --array 100,200,300,400 ./submit_perm_predict_from_random_forest $i '1501:2000' '1e-2'
+done

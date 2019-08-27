@@ -10,9 +10,13 @@ source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
 source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
 source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 source('~/MRC_BSU_Internship_LDL/Target_Gene_Interactions/CalcInteractions.R')
-LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS){
+LoadDosage <- function(p_val_thresh,interaction_path,phenotype,r2_thresh,MAF,Info,targetRS,plessThan = T){
   #Load rsid which passed interaction threshold.
-  interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int < p_val_thresh)
+  if(plessThan){
+    interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int < p_val_thresh)
+  }else{
+    interaction_results <- data.table::fread(interaction_path) %>% dplyr::filter(p_int >= p_val_thresh)
+  }
   #Remove missing rows
   interaction_results <- interaction_results %>% dplyr::filter(!is.na(p_int))
   interaction_results <- interaction_results %>% dplyr::distinct(rsid,.keep_all=T)

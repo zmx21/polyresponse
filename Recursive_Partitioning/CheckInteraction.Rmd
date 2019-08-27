@@ -1,0 +1,113 @@
+---
+title: "Check Interaction"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Load Data
+Load necessary data. 
+
+```{r 1}
+set.seed(888)
+source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+#Read in genotype and phenotype, indep set of interaction variants
+data <- readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/data_p_9e-06_maf_5e-2.rds')
+testingSet <- readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/test_set.rds') 
+trainingSet <- readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/training_set.rds') 
+
+#Obtain top snp
+interactionData <- data.table::fread('~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/HMGCR_LDL_known.txt')
+topSNP <- dplyr::filter(interactionData,rsid %in% colnames(data$dosageMatrix))
+topSNP <- topSNP$rsid[which.min(topSNP$p_int)]
+```
+
+## Training Set Interactions
+We check manually whether the p-value of the strongest interacting SNP match what was calculated.  
+
+```{r 2, echo=TRUE}
+#Training set interaction effect
+summary(lm(formula = 'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[trainingSet],HMGCR = data$dosageTarget[trainingSet],topSNP = data$dosageMatrix[trainingSet,topSNP]),data$covariates[trainingSet,])))
+```
+
+## Testing Set Interactions
+Still some signal in testing set, but not as strong as training set 
+```{r 3, echo=TRUE}
+#Testing set interactions effect
+summary(lm(formula = 'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[testingSet],HMGCR = data$dosageTarget[testingSet],topSNP = data$dosageMatrix[testingSet,topSNP]),data$covariates[testingSet,])))
+```
+## Divide Testing Set Based on Top Interacting SNP
+We divide the testing set to reprsent a 2 node tree, based on the top SNP. A node is the homozygous reference group and another node is homozygous alternative/heterozygous. 
+```{r 4, echo=TRUE}
+#Segregate samples based on alelles of top SNP
+trainingSetData <- ExtractSubSample(data,trainingSet,testingSet)$outofbag
+homoRef <- trainingSetData$dosageMatrix[,topSNP]==0
+homoRefFit <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[homoRef],HMGCR = trainingSetData$dosageTarget[homoRef]),trainingSetData$covariates[homoRef,])))
+nonHomoRefFit <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[!homoRef],HMGCR = trainingSetData$dosageTarget[!homoRef]),trainingSetData$covariates[!homoRef,])))
+```
+We check the difference of HMGCR score between the two group. 
+```{r 5, echo=TRUE}
+homoRefFit
+```
+```{r 6, echo=TRUE}
+nonHomoRefFit
+```
+```{r 7, echo=TRUE}
+trueDiff <- abs(homoRefFit$coefficients['HMGCR','Estimate'] - nonHomoRefFit$coefficients['HMGCR','Estimate'])
+trueDiff
+```
+## Compare With Permuted Phenotype Data
+Up-till now, we have permuted the phenotype only as our approach. 
+```{r 8,echo = TRUE}
+#Segregate Sample Randomly (only phenotype)
+nPerm <- 1000
+diffRandPheno <- rep(NaN,nPerm)
+permFit1 <- list()
+permFit2 <- list()
+for(i in 1:nPerm){
+  randSeg <- sample(homoRef,size = length(homoRef),replace = F)
+  permFit1[[i]] <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[randSeg],HMGCR = trainingSetData$dosageTarget[homoRef]),trainingSetData$covariates[homoRef,])))
+  permFit2[[i]] <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[!randSeg],HMGCR = trainingSetData$dosageTarget[!homoRef]),trainingSetData$covariates[!homoRef,])))
+  diffRandPheno[i] <- abs(permFit1[[i]]$coefficients['HMGCR','Estimate'] - permFit2[[i]]$coefficients['HMGCR','Estimate'])
+}
+```
+Note that HMGCR score's scale is vastly different from the true set. Is it actually reasonable?
+We check an example as to how the HMGCR score varies around two randomly assigned groups. 
+```{r 9,echo=T}
+permFit1[[1]]
+permFit2[[1]]
+```
+We plot the distribution of the differences between two groups, and calculated a p-value for the true difference
+```{r 10,echo=T}
+hist(diffRandPheno)
+sum(diffRandPheno > trueDiff)/nPerm
+```
+## Compare With Permuted Phenotype and Covariate Data
+An more accurate depiction of randomly assigning individuals may to be permuted the covariates and HMGCR genotype together with the phenotype.
+```{r 11,echo=T}
+#Segregate Sample Randomly (along with covariates and HMGCR score)
+nPerm <- 1000
+diffRandAllVar <- rep(NaN,nPerm)
+permFit1 <- list()
+permFit2 <- list()
+for(i in 1:nPerm){
+  randSeg <- sample(homoRef,size = length(homoRef),replace = F)
+  permFit1[[i]] <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[randSeg],HMGCR = trainingSetData$dosageTarget[randSeg]),trainingSetData$covariates[randSeg,])))
+  permFit2[[i]] <- summary(lm(formula = 'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = trainingSetData$phenotypes[!randSeg],HMGCR = trainingSetData$dosageTarget[!randSeg]),trainingSetData$covariates[!randSeg,])))
+  diffRandAllVar[i] <- abs(permFit1[[i]]$coefficients['HMGCR','Estimate'] - permFit2[[i]]$coefficients['HMGCR','Estimate'])
+}
+```
+We check an example as to how the HMGCR score varies around two randomly assigned groups. 
+```{r 12,echo=T}
+permFit1[[1]]
+permFit2[[1]]
+```
+We plot the distribution of the differences between two groups, and calculated a p-value for the true difference
+```{r 13,echo=T}
+hist(diffRandAllVar)
+sum(diffRandAllVar > trueDiff)/nPerm
+```

@@ -12,14 +12,14 @@
 #! Name of the job:
 
 #! Which project should be charged:
-#SBATCH -A MRC-BSU-SL2-GPU
+#SBATCH -A MRC-BSU-SL2-CPU
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=1
 #! How many (MPI) tasks will there be in total? (<= nodes*32)
 #! The skylake/skylake-himem nodes have 32 CPUs (cores) each. 12 cores for BSU-GPU, 16 cores for BSU-CPU
-#SBATCH --ntasks=12
+#SBATCH --ntasks=32
 #! How much wallclock time will be required?
-#SBATCH --time=10-00:00:00
+#SBATCH --time=36:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=FAIL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -27,7 +27,7 @@
 ##SBATCH --no-requeue
 
 #! For 6GB per CPU, set "-p skylake"; for 12GB per CPU, set "-p skylake-himem": 32GB in total for BSU-GPU, 64GB in total for BSU-CPU 
-#SBATCH -p bsu-gpu
+#SBATCH -p skylake
 
 #! sbatch directives end here (put any additional directives above this line)
 
@@ -124,8 +124,7 @@ echo -e "\nnumtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks
 
 echo -e "\nExecuting command:\n==================\n$CMD\n"
 min_node=$(($SLURM_ARRAY_TASK_ID * 100))
-n_cores=12
+n_cores=32
 thresh=$1
-tree_chunk=$2
-perm_type=$3
-Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/ValidateTreeSD.R' $min_node $thresh $n_cores $tree_chunk $perm_type
+MAF=$2
+Rscript '/home/zmx21/MRC_BSU_Internship_LDL/Recursive_Partitioning/ValidateTreeSD.R' $min_node $thresh $n_cores $MAF

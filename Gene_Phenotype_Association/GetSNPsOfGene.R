@@ -21,7 +21,7 @@ GetFlankingSNPs <- function(chr,gene_position_start,gene_position_end,upstream_d
   #End of flanking region
   end_of_region <- gene_position_end + downstream_dist
   
-  snps_within_region <- dplyr::filter(anno_db,as.numeric(chromosome)==chr & as.numeric(position) >= start_of_region & as.numeric(position) <= end_of_region) %>% dplyr::select(rsid,minor_allele_frequency,info) %>% collect()
+  snps_within_region <- dplyr::filter(anno_db,as.numeric(chromosome)==chr & as.numeric(position) >= start_of_region & as.numeric(position) <= end_of_region) %>% dplyr::select(chromosome,position,rsid,minor_allele_frequency,info) %>% collect()
   RSQLite::dbDisconnect(anno_con)
   return(snps_within_region)   
 }

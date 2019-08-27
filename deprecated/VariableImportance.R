@@ -31,46 +31,41 @@ VariableImportance <- function(bootstrapTree,outOfBagData){
 }
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-  p_thresh <-  '9e-6'
-  node_size <- 20000
-  n_cores <- 1
-  MAF <- '5e-2'
-}else if (length(args) != 5){
+  resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+  p_thresh <-  '5e-5'
+  node_size <- 10000
+  n_cores <- 16
+}else if (length(args) != 4){
   stop("You need to supply:\n",
        "# 1: RF result path\n",
        "# 2: P-value threshold\n",
        "# 3: Minimum node size\n",
-       "# 4: Number of cores\n",
-       "# 5: MAF",
+       "# 4: Number of cores",
        "Exiting...", call.=FALSE)
 }else{
   print('All Arguments Supplied')
   str <- c("# 1: RF result path:",
            '# 2: P-value threshold:',
            "# 3: Minimum node size:",
-           "# 4: Number of cores:",
-           "# 5: MAF")
-  variables <- c('resultPath','p_thresh','node_size','n_cores','MAF')
+           "# 4: Number of cores:")
+  variables <- c('resultPath','p_thresh','node_size','n_cores')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
-    #print(paste0(str[i],"   ",args[i]))
+    print(paste0(str[i],"   ",args[i]))
   }
 }
-RunVarImp <- function(treeIndex,resultPath,node_size,p_thresh,testing_set,training_set,MAF){
-  system(paste0('mkdir -p ',paste0(resultPath,'0.75_',node_size,'_',p_thresh,'_',MAF,'/var_imp/')))
+RunVarImp <- function(treeIndex,resultPath,node_size,p_thresh,testing_set,training_set){
+  system(paste0('mkdir -p ',paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/var_imp/')))
   
-  currentTree <- readRDS(paste0(resultPath,'0.75_',node_size,'_',p_thresh,'_',MAF,'/tree',treeIndex,'.rds'))
+  currentTree <- readRDS(paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/tree',treeIndex,'.rds'))
   var_imp <- list()
   var_imp$testingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,testing_set)
   var_imp$trainingVarImp <- VariableImportance(currentTree$bootstrapPartyTree,ExtractSubSample(training_set,currentTree$bootstrapIndex,currentTree$outofbagIndex)$bootstrap)
-  saveRDS(var_imp,paste0(resultPath,'0.75_',node_size,'_',p_thresh,'_',MAF,'/var_imp/var_imp_tree',treeIndex,'.rds'))
+  saveRDS(var_imp,paste0(resultPath,'0.75_',node_size,'_',p_thresh,'/var_imp/tree_var_imp',treeIndex,'.rds'))
 }
-data <- readRDS(paste0(resultPath,'data_p_',as.numeric(p_thresh),'_maf_',MAF,'.rds'))
+data <- readRDS(paste0(resultPath,'data_p_',as.numeric(p_thresh),'.rds'))
 training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
                                          readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
 testing_set <- training_testing_set$outofbag
 training_set <- training_testing_set$bootstrap
-log <- pbmclapply(1:2000,function(i) RunVarImp(i,resultPath,node_size,p_thresh,testing_set,training_set,MAF),
-                  ignore.interactive = T,mc.cores = n_cores)
-saveRDS(log,paste0(resultPath,'0.75_',node_size,'_',p_thresh,'_',MAF,'/var_imp/log.rds'))
+trash <- pbmclapply(1:2000,function(i) RunVarImp(i,resultPath,node_size,p_thresh,testing_set,training_set),ignore.interactive = T,mc.cores = n_cores)

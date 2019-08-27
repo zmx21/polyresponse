@@ -1,0 +1,590 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Check Interaction},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Check Interaction}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+\subsection{Load Data}\label{load-data}
+
+Load necessary data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{888}\NormalTok{)}
+\KeywordTok{source}\NormalTok{(}\StringTok{'~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R'}\NormalTok{)}
+\CommentTok{#Read in genotype and phenotype, indep set of interaction variants}
+\NormalTok{data <-}\StringTok{ }\KeywordTok{readRDS}\NormalTok{(}\StringTok{'~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/data_p_9e-06_maf_5e-2.rds'}\NormalTok{)}
+\NormalTok{testingSet <-}\StringTok{ }\KeywordTok{readRDS}\NormalTok{(}\StringTok{'~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/test_set.rds'}\NormalTok{) }
+\NormalTok{trainingSet <-}\StringTok{ }\KeywordTok{readRDS}\NormalTok{(}\StringTok{'~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/training_set.rds'}\NormalTok{) }
+
+\CommentTok{#Obtain top snp}
+\NormalTok{interactionData <-}\StringTok{ }\NormalTok{data.table}\OperatorTok{::}\KeywordTok{fread}\NormalTok{(}\StringTok{'~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/HMGCR_LDL_known.txt'}\NormalTok{)}
+\NormalTok{topSNP <-}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(interactionData,rsid }\OperatorTok{%in%}\StringTok{ }\KeywordTok{colnames}\NormalTok{(data}\OperatorTok{$}\NormalTok{dosageMatrix))}
+\NormalTok{topSNP <-}\StringTok{ }\NormalTok{topSNP}\OperatorTok{$}\NormalTok{rsid[}\KeywordTok{which.min}\NormalTok{(topSNP}\OperatorTok{$}\NormalTok{p_int)]}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Training Set Interactions}\label{training-set-interactions}
+
+We check manually whether the p-value of the strongest interacting SNP
+match what was calculated.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Training set interaction effect}
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ data}\OperatorTok{$}\NormalTok{phenotypes[trainingSet],}\DataTypeTok{HMGCR =}\NormalTok{ data}\OperatorTok{$}\NormalTok{dosageTarget[trainingSet],}\DataTypeTok{topSNP =}\NormalTok{ data}\OperatorTok{$}\NormalTok{dosageMatrix[trainingSet,topSNP]),data}\OperatorTok{$}\NormalTok{covariates[trainingSet,])))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = data$phenotypes[trainingSet], 
+##         HMGCR = data$dosageTarget[trainingSet], topSNP = data$dosageMatrix[trainingSet, 
+##             topSNP]), data$covariates[trainingSet, ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.5438 -0.5660 -0.0544  0.5047  8.2660 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   2.7829875  0.0171623 162.157  < 2e-16 ***
+## HMGCR        -0.3820950  0.0177533 -21.522  < 2e-16 ***
+## topSNP       -0.0581584  0.0127238  -4.571 4.86e-06 ***
+## sex          -0.0991504  0.0034393 -28.829  < 2e-16 ***
+## ages          0.0125627  0.0002135  58.833  < 2e-16 ***
+## bmi           0.0144541  0.0003615  39.984  < 2e-16 ***
+## PC1           0.5674439  0.1012537   5.604 2.09e-08 ***
+## PC2           0.4648631  0.1205796   3.855 0.000116 ***
+## PC3           0.3979816  0.1637550   2.430 0.015085 *  
+## PC4           0.1582651  0.1898589   0.834 0.404511    
+## PC5          -0.1039104  0.1944323  -0.534 0.593045    
+## HMGCR:topSNP  0.1391195  0.0288157   4.828 1.38e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8227 on 232407 degrees of freedom
+## Multiple R-squared:  0.02696,    Adjusted R-squared:  0.02691 
+## F-statistic: 585.4 on 11 and 232407 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\subsection{Testing Set Interactions}\label{testing-set-interactions}
+
+Still some signal in testing set, but not as strong as training set
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Testing set interactions effect}
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ data}\OperatorTok{$}\NormalTok{phenotypes[testingSet],}\DataTypeTok{HMGCR =}\NormalTok{ data}\OperatorTok{$}\NormalTok{dosageTarget[testingSet],}\DataTypeTok{topSNP =}\NormalTok{ data}\OperatorTok{$}\NormalTok{dosageMatrix[testingSet,topSNP]),data}\OperatorTok{$}\NormalTok{covariates[testingSet,])))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = data$phenotypes[testingSet], 
+##         HMGCR = data$dosageTarget[testingSet], topSNP = data$dosageMatrix[testingSet, 
+##             topSNP]), data$covariates[testingSet, ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3134 -0.5656 -0.0544  0.5025  5.9842 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   2.7306974  0.0242639 112.542  < 2e-16 ***
+## HMGCR        -0.2997272  0.0250480 -11.966  < 2e-16 ***
+## topSNP        0.0380228  0.0180091   2.111  0.03475 *  
+## sex          -0.0965033  0.0048611 -19.852  < 2e-16 ***
+## ages          0.0126818  0.0003022  41.963  < 2e-16 ***
+## bmi           0.0147237  0.0005092  28.913  < 2e-16 ***
+## PC1           0.5147518  0.1436837   3.583  0.00034 ***
+## PC2           0.1351820  0.1710970   0.790  0.42948    
+## PC3          -0.2089147  0.2296577  -0.910  0.36299    
+## PC4           0.0383710  0.2697698   0.142  0.88689    
+## PC5           0.0555513  0.2714770   0.205  0.83786    
+## HMGCR:topSNP -0.0653328  0.0407218  -1.604  0.10863    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8221 on 116198 degrees of freedom
+## Multiple R-squared:  0.02731,    Adjusted R-squared:  0.02722 
+## F-statistic: 296.6 on 11 and 116198 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\subsection{Divide Testing Set Based on Top Interacting
+SNP}\label{divide-testing-set-based-on-top-interacting-snp}
+
+We divide the testing set to reprsent a 2 node tree, based on the top
+SNP. A node is the homozygous reference group and another node is
+homozygous alternative/heterozygous.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Segregate samples based on alelles of top SNP}
+\NormalTok{trainingSetData <-}\StringTok{ }\KeywordTok{ExtractSubSample}\NormalTok{(data,trainingSet,testingSet)}\OperatorTok{$}\NormalTok{outofbag}
+\NormalTok{homoRef <-}\StringTok{ }\NormalTok{trainingSetData}\OperatorTok{$}\NormalTok{dosageMatrix[,topSNP]}\OperatorTok{==}\DecValTok{0}
+\NormalTok{homoRefFit <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[homoRef],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[homoRef]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[homoRef,])))}
+\NormalTok{nonHomoRefFit <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[}\OperatorTok{!}\NormalTok{homoRef],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[}\OperatorTok{!}\NormalTok{homoRef]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[}\OperatorTok{!}\NormalTok{homoRef,])))}
+\end{Highlighting}
+\end{Shaded}
+
+We check the difference of HMGCR score between the two group.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{homoRefFit}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[homoRef], 
+##         HMGCR = trainingSetData$dosageTarget[homoRef]), trainingSetData$covariates[homoRef, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3141 -0.5642 -0.0544  0.5042  5.3064 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  2.7473651  0.0280501  97.945  < 2e-16 ***
+## HMGCR       -0.2943266  0.0253609 -11.606  < 2e-16 ***
+## sex         -0.0938897  0.0057960 -16.199  < 2e-16 ***
+## ages         0.0126335  0.0003597  35.125  < 2e-16 ***
+## bmi          0.0140666  0.0006055  23.230  < 2e-16 ***
+## PC1          0.5046925  0.1702633   2.964  0.00304 ** 
+## PC2          0.0954489  0.2028356   0.471  0.63795    
+## PC3         -0.4844431  0.2840440  -1.706  0.08810 .  
+## PC4         -0.2309564  0.3211134  -0.719  0.47200    
+## PC5          0.1324565  0.3230973   0.410  0.68184    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8212 on 81532 degrees of freedom
+## Multiple R-squared:  0.02623,    Adjusted R-squared:  0.02612 
+## F-statistic:   244 on 9 and 81532 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{nonHomoRefFit}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[!homoRef], 
+##         HMGCR = trainingSetData$dosageTarget[!homoRef]), trainingSetData$covariates[!homoRef, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.8635 -0.5707 -0.0538  0.4987  5.9790 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  2.7329058  0.0432572  63.178   <2e-16 ***
+## HMGCR       -0.3837727  0.0390006  -9.840   <2e-16 ***
+## sex         -0.1028741  0.0089265 -11.525   <2e-16 ***
+## ages         0.0127892  0.0005574  22.946   <2e-16 ***
+## bmi          0.0162811  0.0009411  17.300   <2e-16 ***
+## PC1          0.5273961  0.2678190   1.969   0.0489 *  
+## PC2          0.2294387  0.3185217   0.720   0.4713    
+## PC3          0.3086601  0.3915122   0.788   0.4305    
+## PC4          0.6999219  0.4975055   1.407   0.1595    
+## PC5         -0.0841028  0.5018693  -0.168   0.8669    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8244 on 34658 degrees of freedom
+## Multiple R-squared:  0.02997,    Adjusted R-squared:  0.02972 
+## F-statistic:   119 on 9 and 34658 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{trueDiff <-}\StringTok{ }\KeywordTok{abs}\NormalTok{(homoRefFit}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{] }\OperatorTok{-}\StringTok{ }\NormalTok{nonHomoRefFit}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{])}
+\NormalTok{trueDiff}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.08944614
+\end{verbatim}
+
+\subsection{Compare With Permuted Phenotype
+Data}\label{compare-with-permuted-phenotype-data}
+
+Up-till now, we have permuted the phenotype only as our approach.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Segregate Sample Randomly (only phenotype)}
+\NormalTok{nPerm <-}\StringTok{ }\DecValTok{1000}
+\NormalTok{diffRandPheno <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\OtherTok{NaN}\NormalTok{,nPerm)}
+\NormalTok{permFit1 <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+\NormalTok{permFit2 <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{nPerm)\{}
+\NormalTok{  randSeg <-}\StringTok{ }\KeywordTok{sample}\NormalTok{(homoRef,}\DataTypeTok{size =} \KeywordTok{length}\NormalTok{(homoRef),}\DataTypeTok{replace =}\NormalTok{ F)}
+\NormalTok{  permFit1[[i]] <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[randSeg],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[homoRef]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[homoRef,])))}
+\NormalTok{  permFit2[[i]] <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[}\OperatorTok{!}\NormalTok{randSeg],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[}\OperatorTok{!}\NormalTok{homoRef]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[}\OperatorTok{!}\NormalTok{homoRef,])))}
+\NormalTok{  diffRandPheno[i] <-}\StringTok{ }\KeywordTok{abs}\NormalTok{(permFit1[[i]]}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{] }\OperatorTok{-}\StringTok{ }\NormalTok{permFit2[[i]]}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{])}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Note that HMGCR score's scale is vastly different from the true set. Is
+it actually reasonable? We check an example as to how the HMGCR score
+varies around two randomly assigned groups.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{permFit1[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[randSeg], 
+##         HMGCR = trainingSetData$dosageTarget[homoRef]), trainingSetData$covariates[homoRef, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.4140 -0.5732 -0.0524  0.5091  5.9708 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  3.7004204  0.0284501 130.067   <2e-16 ***
+## HMGCR       -0.0250215  0.0257225  -0.973    0.331    
+## sex          0.0008579  0.0058786   0.146    0.884    
+## ages        -0.0005163  0.0003648  -1.415    0.157    
+## bmi          0.0009969  0.0006142   1.623    0.105    
+## PC1          0.1262681  0.1726907   0.731    0.465    
+## PC2         -0.0982198  0.2057274  -0.477    0.633    
+## PC3         -0.1262759  0.2880935  -0.438    0.661    
+## PC4          0.3966218  0.3256914   1.218    0.223    
+## PC5          0.3091158  0.3277036   0.943    0.346    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8329 on 81532 degrees of freedom
+## Multiple R-squared:  0.0001083,  Adjusted R-squared:  -2.106e-06 
+## F-statistic: 0.9809 on 9 and 81532 DF,  p-value: 0.4533
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{permFit2[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[!randSeg], 
+##         HMGCR = trainingSetData$dosageTarget[!homoRef]), trainingSetData$covariates[!homoRef, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.8935 -0.5793 -0.0641  0.5155  5.5717 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  3.707e+00  4.382e-02  84.590  < 2e-16 ***
+## HMGCR        8.205e-03  3.951e-02   0.208  0.83549    
+## sex          2.909e-03  9.043e-03   0.322  0.74770    
+## ages        -2.836e-04  5.646e-04  -0.502  0.61552    
+## bmi         -8.855e-05  9.534e-04  -0.093  0.92600    
+## PC1          7.106e-01  2.713e-01   2.619  0.00882 ** 
+## PC2          2.019e-01  3.227e-01   0.626  0.53148    
+## PC3         -9.905e-01  3.966e-01  -2.497  0.01252 *  
+## PC4         -1.114e-01  5.040e-01  -0.221  0.82514    
+## PC5          5.451e-02  5.084e-01   0.107  0.91461    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8351 on 34658 degrees of freedom
+## Multiple R-squared:  0.0003874,  Adjusted R-squared:  0.0001278 
+## F-statistic: 1.492 on 9 and 34658 DF,  p-value: 0.1441
+\end{verbatim}
+
+We plot the distribution of the differences between two groups, and
+calculated a p-value for the true difference
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(diffRandPheno)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CheckInteraction_files/figure-latex/10-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{sum}\NormalTok{(diffRandPheno }\OperatorTok{>}\StringTok{ }\NormalTok{trueDiff)}\OperatorTok{/}\NormalTok{nPerm}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.056
+\end{verbatim}
+
+\subsection{Compare With Permuted Phenotype and Covariate
+Data}\label{compare-with-permuted-phenotype-and-covariate-data}
+
+An more accurate depiction of randomly assigning individuals may to be
+permuted the covariates and HMGCR genotype together with the phenotype.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Segregate Sample Randomly (along with covariates and HMGCR score)}
+\NormalTok{nPerm <-}\StringTok{ }\DecValTok{1000}
+\NormalTok{diffRandAllVar <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\OtherTok{NaN}\NormalTok{,nPerm)}
+\NormalTok{permFit1 <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+\NormalTok{permFit2 <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{nPerm)\{}
+\NormalTok{  randSeg <-}\StringTok{ }\KeywordTok{sample}\NormalTok{(homoRef,}\DataTypeTok{size =} \KeywordTok{length}\NormalTok{(homoRef),}\DataTypeTok{replace =}\NormalTok{ F)}
+\NormalTok{  permFit1[[i]] <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[randSeg],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[randSeg]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[randSeg,])))}
+\NormalTok{  permFit2[[i]] <-}\StringTok{ }\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =} \StringTok{'LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5'}\NormalTok{,}\DataTypeTok{data =} \KeywordTok{cbind}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{LDL =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{phenotypes[}\OperatorTok{!}\NormalTok{randSeg],}\DataTypeTok{HMGCR =}\NormalTok{ trainingSetData}\OperatorTok{$}\NormalTok{dosageTarget[}\OperatorTok{!}\NormalTok{randSeg]),trainingSetData}\OperatorTok{$}\NormalTok{covariates[}\OperatorTok{!}\NormalTok{randSeg,])))}
+\NormalTok{  diffRandAllVar[i] <-}\StringTok{ }\KeywordTok{abs}\NormalTok{(permFit1[[i]]}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{] }\OperatorTok{-}\StringTok{ }\NormalTok{permFit2[[i]]}\OperatorTok{$}\NormalTok{coefficients[}\StringTok{'HMGCR'}\NormalTok{,}\StringTok{'Estimate'}\NormalTok{])}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+We check an example as to how the HMGCR score varies around two randomly
+assigned groups.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{permFit1[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[randSeg], 
+##         HMGCR = trainingSetData$dosageTarget[randSeg]), trainingSetData$covariates[randSeg, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3140 -0.5661 -0.0546  0.5050  5.9916 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  2.7505945  0.0280752  97.972  < 2e-16 ***
+## HMGCR       -0.3340316  0.0254065 -13.147  < 2e-16 ***
+## sex         -0.0972650  0.0058024 -16.763  < 2e-16 ***
+## ages         0.0125900  0.0003605  34.925  < 2e-16 ***
+## bmi          0.0148803  0.0006087  24.445  < 2e-16 ***
+## PC1          0.6307045  0.1714147   3.679 0.000234 ***
+## PC2          0.2391138  0.2042651   1.171 0.241761    
+## PC3         -0.3180876  0.2727800  -1.166 0.243579    
+## PC4         -0.0385643  0.3207367  -0.120 0.904296    
+## PC5          0.1612935  0.3216197   0.502 0.616018    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8217 on 81532 degrees of freedom
+## Multiple R-squared:  0.02751,    Adjusted R-squared:  0.0274 
+## F-statistic: 256.2 on 9 and 81532 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{permFit2[[}\DecValTok{1}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = "LDL ~ HMGCR + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5", 
+##     data = cbind(data.frame(LDL = trainingSetData$phenotypes[!randSeg], 
+##         HMGCR = trainingSetData$dosageTarget[!randSeg]), trainingSetData$covariates[!randSeg, 
+##         ]))
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.6686 -0.5641 -0.0528  0.4985  5.1305 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  2.7252411  0.0431753  63.120  < 2e-16 ***
+## HMGCR       -0.2896799  0.0388483  -7.457 9.08e-14 ***
+## sex         -0.0947742  0.0089055 -10.642  < 2e-16 ***
+## ages         0.0128995  0.0005545  23.262  < 2e-16 ***
+## bmi          0.0143455  0.0009298  15.429  < 2e-16 ***
+## PC1          0.2471257  0.2635196   0.938    0.348    
+## PC2         -0.0970386  0.3132319  -0.310    0.757    
+## PC3          0.0837563  0.4255856   0.197    0.844    
+## PC4          0.2207780  0.4988873   0.443    0.658    
+## PC5         -0.2066381  0.5063552  -0.408    0.683    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8232 on 34658 degrees of freedom
+## Multiple R-squared:  0.02676,    Adjusted R-squared:  0.0265 
+## F-statistic: 105.9 on 9 and 34658 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+We plot the distribution of the differences between two groups, and
+calculated a p-value for the true difference
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(diffRandAllVar)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CheckInteraction_files/figure-latex/13-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{sum}\NormalTok{(diffRandAllVar }\OperatorTok{>}\StringTok{ }\NormalTok{trueDiff)}\OperatorTok{/}\NormalTok{nPerm}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.049
+\end{verbatim}
+
+
+\end{document}

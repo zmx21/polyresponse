@@ -71,7 +71,9 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
     dosageVector <- dosageVector[,trainingSet]
     
     #Calculate main effects of each individual SNP
-    beta_coeff <- CalcSnpPhenoAssociation(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,as.numeric(eur_only),cov=cov,PC=as.numeric(PC),med=as.numeric(med),as.numeric(n_cores),F)$coeff
+    beta_coeff <- CalcSnpPhenoAssociation(path,sample_file_prefix,bgen_file_prefix,phenotype,targetRS,
+                                          as.numeric(eur_only),cov=cov,PC=as.numeric(PC),
+                                          med=as.numeric(med),as.numeric(n_cores),F)$coeff
     #Flip alleles such that all are LDL lowering
     dosageTarget <- dosageVector
     for(i in 1:nrow(dosageTarget)){
@@ -93,32 +95,40 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Run chunks in parallel
   print(paste0('Calculating Interactions: ',length(chunks),' chunks'))
-  allResultsTbl <- pbmclapply(chunks,function(i) { #lapply(chunks, function(i){ 
+  allResultsTbl <- pbmclapply(chunks,function(i){ #lapply(chunks, function(i){  
     # i <- 1
     currentRSIdChunk <- rsIDChunks[[i]]
     dosageMatrix <- LoadBgen(path,bgen_file_prefix,currentRSIdChunk,rep(chr,length(currentRSIdChunk)))
     
     #Keep SNPs other than the target SNP    
     nonTargetSnps <- setdiff(rownames(dosageMatrix),targetRS)
+    #remove duplicated SNPs
+    loadedSnps <- rownames(dosageMatrix)
+    dupSnps <- loadedSnps[which(duplicated(loadedSnps))]
+    snpsToKeep <- setdiff(nonTargetSnps,dupSnps)
+    #Remove target snps and dup snps
+    dosageMatrix <- dosageMatrix[loadedSnps %in% snpsToKeep,]
     #Keep samples without missing info
     dosageMatrix <- dosageMatrix[,samplesToKeep]
     #Keep samples in training set
     dosageMatrix <- dosageMatrix[,trainingSet]
     
-    
     #Intialize results vector
     snp_names <- unlist(lapply(c('snp','target','int'),function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
     cov_names <- unlist(lapply(cov_names,function(x) c(paste0('coeff_',x),paste0('std_err_',x),paste0('t_',x),paste0('p_',x))))
     resultsTbl <- read.csv(text = paste(c('rsid',snp_names,cov_names,'RMSE'),collapse = ','))
-    resultsTbl[1:length(nonTargetSnps),] <- NA
-    for(k in 1:length(nonTargetSnps)){
-      resultsTbl[k,1] <- nonTargetSnps[k]
-      resultsTbl[k,2:ncol(resultsTbl)] <- CalcInteractions(dosageMatrix[nonTargetSnps[k],],dosageTarget,phenotypes,covariates)
+    resultsTbl[1:length(rownames(dosageMatrix)),] <- NA
+    for(k in 1:length(rownames(dosageMatrix))){
+      resultsTbl[k,1] <- rownames(dosageMatrix)[k]
+      resultsTbl[k,2:ncol(resultsTbl)] <- CalcInteractions(dosageMatrix[rownames(dosageMatrix)[k],],
+                                                           dosageTarget,phenotypes,covariates)
     }
     data.table::fwrite(resultsTbl,file = paste0(path_out,'chunk',i,'.txt'),sep = '\t',col.names = T,row.names = F)
   },mc.cores = as.numeric(n_cores),ignore.interactive = T)
   #})
+  saveRDS(allResultsTbl,file = paste0(path_out,'log.rds'))
 }
+
 ##First read in the arguments listed at the command line
 args=(commandArgs(TRUE))
 print(args)
@@ -131,7 +141,7 @@ if(length(args)==0){
   path <-  '~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/'
   sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'
   bgen_file_prefix <- 'ukb_imp_chr#_HRConly'
-  chr <- '5'
+  chr <- '17'
   phenotype = 'LDLdirect'
   targetRS <- 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
   n_cores <- 1
@@ -142,7 +152,7 @@ if(length(args)==0){
   MAF <- 0.05
   info <- 0.5
   med=1
-  chunks <- '1,1'
+  chunks <- '1,11'
   training_set <- '~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'
   if(out_suffix == ''){
     path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/')
@@ -194,7 +204,8 @@ if(length(args)==0){
            '# 14: Number of Cores:',
            '# 15: Chunks:',
            '# 16: Training Set:')
-  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only','cov','PC','med','MAF','info','n_cores','chunks','training_set')
+  variables <- c('path','sample_file_prefix','bgen_file_prefix','chr','phenotype','targetRS','out_suffix','eur_only',
+                 'cov','PC','med','MAF','info','n_cores','chunks','training_set')
   for(i in 1:length(args)){
     eval(parse(text=paste0(variables[i],'=',"'",args[[i]],"'")))
     print(paste0(str[i],"   ",args[i]))
