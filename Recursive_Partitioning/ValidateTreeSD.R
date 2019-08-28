@@ -110,7 +110,7 @@ MAF = '5e-2'
 # comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
 
 node_size <- c(10000,20000,30000,40000)
-thresh <- c('9e-6','7.5e-6','7.25e-6','7e-6','6.75e-6','6.5e-6','6e-6','5e-6','3e-6')
+thresh <- c('6.75e-6','6.5e-6','6e-6','5e-6','3e-6') #c('9e-6','7.5e-6','7.25e-6','7e-6','6.75e-6','6.5e-6','6e-6','5e-6','3e-6')
 comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
 thresh <- c('9e-5','7e-5','5e-5','3e-5','1e-5')
 node_size <- c(5000,10000,20000,30000,40000)

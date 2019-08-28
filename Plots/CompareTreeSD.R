@@ -3,7 +3,7 @@ library(pbmcapply)
 GetSD <- function(path){
   chunks <- c('_1_500','_501_1000','_1001_1500','_1501_2000')
   sdNonPerm <- unlist(lapply(chunks,function(x) readRDS(paste0(path,'sd',x,'.rds'))),recursive = F)
-  sdPerm <- unlist(lapply(chunks,function(x) readRDS(paste0(path,'sd_pheno_perm',x,'.rds'))),recursive = F)
+  sdPerm <- unlist(lapply(chunks,function(x) readRDS(paste0(path,'sd_pheno_perm_new',x,'.rds'))),recursive = F)
   return(list(sdNonPerm=sdNonPerm,sdPerm=sdPerm))
 }
 
@@ -18,7 +18,7 @@ comb <- rbind(comb,expand.grid(node_size,thresh))
 
 colnames(comb) <- c('node_size','thresh')
 
-# sd_maf_0p05 <- pbmclapply(1:nrow(comb),function(i) GetSD(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'_5e-2/')),mc.cores = 1)
+sd_maf_0p05 <- pbmclapply(1:nrow(comb),function(i) GetSD(paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'_5e-2/')),mc.cores = 1)
 # saveRDS(sd_maf_0p05,file = '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/tree_sd.rds')
 training_sd <- data.frame(p_thresh=numeric(),node_size=numeric(),sd=numeric())
 testing_sd <- data.frame(p_thresh=numeric(),node_size=numeric(),sd=numeric(),mean_diff=numeric())
@@ -40,7 +40,7 @@ for(i in 1:nrow(comb)){
                                             mean_diff = mean(sapply(1:length(curTestingSd),function(i) sum(curTestingSd[i] - unlist(curPermSd[[i]]))/length(unlist(curPermSd[[i]])))),
                                             low_CI = quantile(sapply(1:length(curTestingSd),function(i) sum(curTestingSd[i] - unlist(curPermSd[[i]]))/length(unlist(curPermSd[[i]]))),probs = 0.05),
                                             high_CI = quantile(sapply(1:length(curTestingSd),function(i) sum(curTestingSd[i] - unlist(curPermSd[[i]]))/length(unlist(curPermSd[[i]]))),probs = 0.95),
-                                            mean_p = mean(sapply(1:length(curTestingSd),function(i) sum(curTestingSd[i] < unlist(curPermSd[[i]]))))))
+                                            mean_p = mean(sapply(1:length(curTestingSd),function(i) sum(curTestingSd[i] < unlist(curPermSd[[i]]))/length(unlist(curPermSd[[i]]))))))
   curPermSd <- do.call(cbind,curPermSd)
   curPermSd <- sapply(1:nrow(curPermSd),function(x) mean(unlist(curPermSd[x,])))
   perm_sd <- rbind(perm_sd,data.frame(p_thresh = as.numeric(as.character(comb$thresh[i])),
@@ -89,14 +89,14 @@ p4 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_
   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
   ylab('Difference in SD') +
   labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Testing Set') 
+  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set') 
 p5 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=mean_p/1000,colour=factor(node_size))) +
   geom_line(position = pd)+
   geom_point(position = pd)+
   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
   ylab('P-value, Perm_SD > True_SD') +
   labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Testing Set') 
+  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set') 
 
 p6 <- ggplot(dplyr::filter(testing_sd,node_size == 30000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
@@ -105,7 +105,7 @@ p6 <- ggplot(dplyr::filter(testing_sd,node_size == 30000),aes(x=-1*log10(p_thres
   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
   ylab('Difference in SD') +
   labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Testing Set') 
+  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set') 
 
 p7 <- ggplot(dplyr::filter(testing_sd,node_size == 40000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
@@ -114,7 +114,12 @@ p7 <- ggplot(dplyr::filter(testing_sd,node_size == 40000),aes(x=-1*log10(p_thres
   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
   ylab('Difference in SD') +
   labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Testing Set') 
+  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set') 
 
 library(ggpubr)
 #ggarrange(p2,p3,ncol=2,nrow=1,common.legend = T)
+joined_df <- dplyr::inner_join(testing_sd,perm_sd,by=c('p_thresh'='p_thresh','node_size'='node_size')) %>% dplyr::select(p_thresh,node_size,'testing_sd'=sd.x,'testing_sd_low_CI'=low_CI.x,'testing_SD_high_CI'=high_CI.x,'perm_testing_sd'=sd.y,'perm_testing_sd_low_CI'=low_CI.y,'perm_testing_sd_high_CI'=high_CI.y,'sd_mean_diff'=mean_diff,'p(sd_perm > sd_testing)'=mean_p)
+library(gridExtra)
+joined_df <- signif(joined_df,3)
+tbl <- tableGrob(joined_df)
+# grid.table(joined_df)
