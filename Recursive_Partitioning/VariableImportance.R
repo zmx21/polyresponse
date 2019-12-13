@@ -31,9 +31,9 @@ VariableImportance <- function(bootstrapTree,outOfBagData){
 }
 args=(commandArgs(TRUE))
 if(length(args)==0){
-  resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-  p_thresh <-  '9e-6'
-  node_size <- 20000
+  resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+  p_thresh <-  '7e-6'
+  node_size <- 30000
   n_cores <- 1
   MAF <- '5e-2'
 }else if (length(args) != 5){

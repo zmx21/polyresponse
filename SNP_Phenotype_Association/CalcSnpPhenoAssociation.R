@@ -14,8 +14,8 @@ LinearFit <- function(dosageSubMatrix,phenotypes,covariates){
   
   fit <- RcppEigen::fastLm(y = phenotypes,X = mdlMat)
   #Return coefficient and significance of interaction term
-  results <- summary(fit)$coefficients[2,c(1,4)]
-  names(results) <- c('coeff','p')
+  results <- summary(fit)$coefficients[2,c(1,2,4)]
+  names(results) <- c('coeff','se','p')
   return(list(results = results,fit=summary(fit)))
 }
 
@@ -49,7 +49,7 @@ CalcSnpPhenoAssociation <- function(path,sample_file_prefix,bgen_file_prefix,phe
     }
   }else{
     #Calc marginal effects
-    results <- pbmclapply(1:length(rsid),function(i) {
+    results <- lapply(1:length(rsid),function(i) {
       fit = tryCatch({
         dosageVector <- LoadBgen(path,bgen_file_prefix,rsid[i])
         dosageVector <- dosageVector[,samplesToKeep]
@@ -60,7 +60,7 @@ CalcSnpPhenoAssociation <- function(path,sample_file_prefix,bgen_file_prefix,phe
         return(c(coeff=NA,p=NA))
       })
       return(fit)
-    },mc.cores=n_cores) %>% {do.call(rbind,.)}
+    })%>% {do.call(rbind,.)}
     results <- as.data.frame(results)
     results <- cbind(data.frame(rsid=rsid,stringsAsFactors = F),results)
     return(results)

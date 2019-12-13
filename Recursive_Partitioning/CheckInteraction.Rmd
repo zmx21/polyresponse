@@ -21,9 +21,9 @@ testingSet <- readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/test
 trainingSet <- readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/training_set.rds') 
 
 #Obtain top snp
-interactionData <- data.table::fread('~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/HMGCR_LDL_known.txt')
-topSNP <- dplyr::filter(interactionData,rsid %in% colnames(data$dosageMatrix))
-topSNP <- topSNP$rsid[which.min(topSNP$p_int)]
+interactionData <- data.table::fread('~/bsu_scratch/LDL_Project_Data_Aug2019/Interaction_Data/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect_known/allchr.txt')
+topSNPs <- dplyr::filter(interactionData,rsid %in% colnames(data$dosageMatrix))
+topSNP <- topSNPs$rsid[which.min(topSNPs$p_int)]
 ```
 
 ## Training Set Interactions
@@ -33,12 +33,31 @@ We check manually whether the p-value of the strongest interacting SNP match wha
 #Training set interaction effect
 summary(lm(formula = 'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[trainingSet],HMGCR = data$dosageTarget[trainingSet],topSNP = data$dosageMatrix[trainingSet,topSNP]),data$covariates[trainingSet,])))
 ```
+## Interaction GRS
+```{r 2, echo=TRUE}
+#Training set interaction effect
+p_thresh <- 9e-6
+grs <- data$dosageMatrix[trainingSet,topSNPs$rsid] %*% topSNPs$coeff_int
+lower_quantile <- grs <= quantile(grs,probs = 0.25)
+high_quantile <- grs >= quantile(grs,probs = 0.75)
+summary(lm(formula = 'LDL ~ HMGCR+ sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[trainingSet][lower_quantile],HMGCR = data$dosageTarget[trainingSet][lower_quantile]),data$covariates[trainingSet,][lower_quantile,])))
+summary(lm(formula = 'LDL ~ HMGCR+ sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[trainingSet][high_quantile],HMGCR = data$dosageTarget[trainingSet][high_quantile]),data$covariates[trainingSet,][high_quantile,])))
+```
+
 
 ## Testing Set Interactions
 Still some signal in testing set, but not as strong as training set 
 ```{r 3, echo=TRUE}
 #Testing set interactions effect
 summary(lm(formula = 'LDL ~ HMGCR*topSNP + sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[testingSet],HMGCR = data$dosageTarget[testingSet],topSNP = data$dosageMatrix[testingSet,topSNP]),data$covariates[testingSet,])))
+
+grs_testing <- data$dosageMatrix[testingSet,topSNPs$rsid] %*% topSNPs$coeff_int
+lower_quantile_testing <- grs_testing <= quantile(grs_testing,probs = 0.25)
+high_quantile_testing <- grs_testing >= quantile(grs_testing,probs = 0.75)
+summary(lm(formula = 'LDL ~ HMGCR+ sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[testingSet][lower_quantile_testing],HMGCR = data$dosageTarget[testingSet][lower_quantile_testing]),data$covariates[testingSet,][lower_quantile_testing,])))
+summary(lm(formula = 'LDL ~ HMGCR+ sex + ages + bmi + PC1 + PC2 +PC3 + PC4 + PC5',data = cbind(data.frame(LDL = data$phenotypes[testingSet][high_quantile_testing],HMGCR = data$dosageTarget[testingSet][high_quantile_testing]),data$covariates[testingSet,][high_quantile_testing,])))
+
+
 ```
 ## Divide Testing Set Based on Top Interacting SNP
 We divide the testing set to reprsent a 2 node tree, based on the top SNP. A node is the homozygous reference group and another node is homozygous alternative/heterozygous. 

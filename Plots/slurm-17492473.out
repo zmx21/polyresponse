@@ -1,0 +1,39 @@
+Changed directory to /home/zmx21/MRC_BSU_Internship_LDL/Plots.
+
+JobID: 17492473
+======
+Time: Tue Dec  3 23:50:42 GMT 2019
+Running on master node: cpu-e-959
+Current directory: /home/zmx21/MRC_BSU_Internship_LDL/Plots
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LC_CTYPE = "UTF-8",
+	LANG = "en_GB.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+
+Nodes allocated:
+================
+cpu-e-959
+
+numtasks=5, numnodes=1, mpi_tasks_per_node=5 (OMP_NUM_THREADS=1)
+
+Executing command:
+==================
+
+
+During startup - Warning message:
+Setting LC_CTYPE failed, using "C" 
+Loading required package: ggplot2
+Loading required package: magrittr
+Warning message:
+As of rlang 0.4.0, dplyr must be at least version 0.8.0.
+x dplyr 0.7.6 is too old for rlang 0.4.2.
+i Please update dplyr with `install.packages("dplyr")`. 
+Loading required package: parallel
+Loading required package: future
+[1] 1
+slurmstepd: error: *** JOB 17492473 ON cpu-e-959 CANCELLED AT 2019-12-04T00:31:57 ***
+slurmstepd: error: task_p_post_term: rmdir(/sys/fs/cgroup/cpuset/slurm17492473/slurm17492473.4294967294_0) failed Device or resource busy

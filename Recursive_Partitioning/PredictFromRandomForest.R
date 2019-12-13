@@ -49,24 +49,38 @@ PredictFromRF <- function(testingSetSamples,randomForestPath,n_cores){
 
 #MAIN FUNCTION
 RunPredictionFromRF <- function(resultPath,suffix,p_thresh,n_cores){
-  data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'.rds'))
+  data <- readRDS(paste0(resultPath,'data_p_',p_thresh,'_maf_5e-2.rds'))
   print('Loaded Data')
-  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'),
-                                           readRDS('~/bsu_scratch/LDL_Project_Data/Genotype_Data/test_set.rds'))
+  training_testing_set <- ExtractSubSample(data,readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/training_set.rds'),
+                                           readRDS('~/bsu_scratch/LDL_Project_Data_Aug2019/Genotype_Data/test_set.rds'))
   testing_set <- training_testing_set$outofbag
   PredictFromRF(testing_set,paste0(resultPath,suffix),n_cores)
 }
-args=(commandArgs(TRUE))
-node_size <- as.numeric(args[[1]])
-thresh <- args[[2]]
+# args=(commandArgs(TRUE))
+# node_size <- as.numeric(args[[1]])
+# thresh <- args[[2]]
 #n_cores <- as.numeric(args[[3]])
 
-# node_size <- 10000
-# thresh <- '7e-5'
-n_cores <- 1
+# node_size <- 20000
+# thresh <- '3e-6'
+# n_cores <- 10
+# 
+# node_size <- c(10000,20000,30000,40000)
+# thresh <- c('7.5e-6','7.25e-6','6.75e-6','6.5e-6','6e-6')
+# comb <- expand.grid(node_size,thresh)
+# node_size <- c(5000,node_size)
+# thresh <- c('9e-6','7e-6','5e-6','3e-6','9e-5','7e-5','5e-5','3e-5','1e-5')
+# comb <- rbind(comb,expand.grid(node_size,thresh))
+# colnames(comb) <- c('node_size','thresh')
+# 
+# print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))
+# resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
+# 
+# for(i in 1:nrow(comb)){
+#   RunPredictionFromRF(resultPath,paste0('0.75_',comb$node_size[i],'_',comb$thresh[i],'_5e-2/'),as.numeric(as.character(comb$thresh[i])),n_cores)
+# }
 
-print(c("nodesize"=node_size,"thresh"=thresh,"n_cores"=n_cores))
-resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect/'
+betas <- lapply(1:2000,function(i) readRDS(paste0('~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/0.75_20000_3e-6_5e-2/prediction_betas/tree',i,'.rds')))
 
-RunPredictionFromRF(resultPath,paste0('0.75_',node_size,'_',thresh,'/'),as.numeric(thresh),n_cores)
+testing_main_effects <- lapply(betas,function(x) x$testingMainEffects[as.character(x$nodeAssignment)])
+training_main_effects <- lapply(betas,function(x) x$trainingMainEffect[as.character(x$nodeAssignment)])
