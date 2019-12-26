@@ -4,8 +4,8 @@ source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
 library(RcppEigen)
 library(pbmcapply)
 library(dplyr)
-LinearFit <- function(dosageSubMatrix,phenotypes,covariates){
-  #Create model matrix, with main and interaction effects of two SNPs. 
+LinearFit <- function(dosageSubMatrix,phenotypes,covariates){  
+#Create model matrix, with main and interaction effects of two SNPs. 
   if(ncol(covariates) > 0){
     mdlMat <- cbind('Intercept' = rep(1,length(dosageSubMatrix)),'snp' = dosageSubMatrix,covariates)
   }else{

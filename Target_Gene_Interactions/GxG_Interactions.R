@@ -9,6 +9,7 @@ library(dplyr)
 library(parallel)
 library(data.table)
 library(pbmcapply)
+library(dbplyr)
 
 source('~/MRC_BSU_Internship_LDL/Target_Gene_Interactions/CalcInteractions.R')
 source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
@@ -21,7 +22,7 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   
   #Find all rsids, and generate chunks to read.
   print('Loading rsID')
-  allRSIds <- FindAllRSIds(chr,as.numeric(MAF),as.numeric(Info)) %>% dplyr::filter(!rsid%in%targetRS)
+  allRSIds <- data.table::fread(paste0(path,'ukb_imp_chr',chr,'_HRConly_samplefilt_snpstats.txt'),skip=10,header = T) %>% dplyr::filter(minor_allele_frequency > as.numeric(MAF)) %>% dplyr::filter(info > as.numeric(Info)) %>% dplyr::filter(!rsid%in%targetRS) #%>% dplyr::filter(rsid == 'rs162724') 
   allRSIds <- unique(allRSIds$rsid)
   rsIDChunks <- split(allRSIds,seq(length(allRSIds)-1)%/%chunkSize)
   
@@ -48,10 +49,14 @@ RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phen
   #Split rsid based on comma
   targetRS <- unlist(strsplit(targetRS,split = ','))
 
-  #Load training set index
-  trainingSet <- readRDS(file = training_set)
-  phenotypes <- phenotypes[trainingSet]
-  covariates <- covariates[trainingSet,]
+  #Load training set index,subset if specified
+  if(training_set != 'NULL'){
+     trainingSet <- readRDS(file = training_set)
+     phenotypes <- phenotypes[trainingSet]
+     covariates <- covariates[trainingSet,]
+  }else{
+     trainingSet <- 1:length(phenotypes)
+  }
   
   #Calculate gene score if more than 1 target SNP listed, otherwise load single SNP dosage vector.
   if(length(targetRS) < 2){
@@ -146,14 +151,14 @@ if(length(args)==0){
   targetRS <- 'rs12916,rs17238484,rs5909,rs2303152,rs10066707,rs2006760'
   n_cores <- 1
   eur_only <- 1
-  out_suffix <- 'test'
+  out_suffix <- 'test_full'
   cov <- 'sex,ages,bmi'
   PC <-  5
   MAF <- 0.05
   info <- 0.5
   med=1
   chunks <- '1,11'
-  training_set <- '~/bsu_scratch/LDL_Project_Data/Genotype_Data/training_set.rds'
+  training_set <- 'NULL'
   if(out_suffix == ''){
     path_out <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/')
     path_out_chr <- paste0(gsub('Genotype_Data','Interaction_Data',path),gsub(',','_',targetRS),'_',phenotype,'/chr',chr,'/')
