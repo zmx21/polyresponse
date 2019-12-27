@@ -1,4 +1,4 @@
-## Identifying genetic predictors which underlie the heterogeneity in response to treatment. 
+## Polygenic modelling of treatment effect heterogeneity
 The standard workflow should be:
 1. Calculate the quality metric of each SNP
     - The scripts assume that genotype files are in bgen format, and organized by chromosome (as from UKBB). 
