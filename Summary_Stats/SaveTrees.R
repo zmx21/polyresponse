@@ -24,3 +24,11 @@ for(i in 1:nrow(comb)){
   system(paste0('mkdir -p ',cur_dir,'pub_trees'))
   lapply(1:2000,function(i) SaveTree(cur_dir,i))
 }
+
+for(i in 1:nrow(comb)){
+  print(i)
+  cur_in = paste0(resultPath,'0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'_5e-2/pub_trees/*')
+  cur_out = paste0(resultPath,'RFIT_pub/0.75_',comb$node_size[i],'_',as.character(comb$thresh[i]),'_5e-2/')
+  system(paste0('mkdir -p ',cur_out))
+  system(paste0('cp ',cur_in,' ',cur_out))
+}
