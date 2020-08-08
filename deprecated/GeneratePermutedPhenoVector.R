@@ -4,7 +4,7 @@
 #Output: .rds file containing the list of genotype matrices.
 ####################################################################################
 
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('../Recursive_Partitioning/ExtractSubsample.R')
 #Permuted dosgage of each SNP, across samples
 GeneratePermutation <- function(phenoVector){
   permPheno <- sample(phenoVector,size = length(phenoVector),replace = F)

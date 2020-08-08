@@ -49,15 +49,15 @@ for(i in 1:nrow(comb)){
 
 }
 library(ggplot2)
-p1 <- ggplot(training_sd,aes(x=-1*log10(p_thresh),y=sd,colour=factor(node_size))) +
-  geom_line()+
-  geom_point()+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
-  ylab('Weighted SD') +
-  labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) +
-  scale_y_continuous(breaks=seq(0.0,0.36,0.02),limits=c(0.0,0.36))+
-  scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) + ggtitle('Training Set SD')
+# p1 <- ggplot(training_sd,aes(x=-1*log10(p_thresh),y=sd,colour=factor(node_size))) +
+#   geom_line()+
+#   geom_point()+
+#   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
+#   ylab('Weighted SD') +
+#   labs(colour='Minimum\nNode Size') +
+#   theme(text = element_text(size=14)) +
+#   scale_y_continuous(breaks=seq(0.0,0.36,0.02),limits=c(0.0,0.36))+
+#   scale_x_continuous(breaks=seq(3.9,5.4,0.2),limits=c(3.9,5.35)) + ggtitle('Training Set SD')
 
 p2 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=sd,colour=factor(node_size))) +
   geom_line()+
@@ -88,36 +88,37 @@ p4 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_
   ylab('Difference in Weighted SD') +
   labs(colour='Minimum\nNode Size') +
   theme(text = element_text(size=14)) #+ ggtitle('SD Difference between True and Permuted Validation Set')
-p5 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=mean_p/1000,colour=factor(node_size))) +
-  geom_line(position = pd)+
-  geom_point(position = pd)+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p)"))) +
-  ylab('P-value, Perm_SD > True_SD') +
-  labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) #+ ggtitle('SD Difference between True and Permuted Validation Set')
 
-p6 <- ggplot(dplyr::filter(testing_sd,node_size == 30000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
-  geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
-  geom_line(position = pd)+
-  geom_point(position = pd)+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
-  ylab('Difference in SD') +
-  labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set')
-
-p7 <- ggplot(dplyr::filter(testing_sd,node_size == 40000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
-  geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
-  geom_line(position = pd)+
-  geom_point(position = pd)+
-  xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
-  ylab('Difference in SD') +
-  labs(colour='Minimum\nNode Size') +
-  theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set')
-
-library(ggpubr)
-#ggarrange(p2,p3,ncol=2,nrow=1,common.legend = T)
-joined_df <- dplyr::inner_join(testing_sd,perm_sd,by=c('p_thresh'='p_thresh','node_size'='node_size')) %>% dplyr::select(p_thresh,node_size,'testing_sd'=sd.x,'testing_sd_low_CI'=low_CI.x,'testing_SD_high_CI'=high_CI.x,'perm_testing_sd'=sd.y,'perm_testing_sd_low_CI'=low_CI.y,'perm_testing_sd_high_CI'=high_CI.y,'sd_mean_diff'=mean_diff,'p(sd_perm > sd_testing)'=mean_p)
-library(gridExtra)
-joined_df <- signif(joined_df,3)
-tbl <- tableGrob(joined_df)
+# p5 <- ggplot(testing_sd,aes(x=-1*log10(p_thresh),y=mean_p/1000,colour=factor(node_size))) +
+#   geom_line(position = pd)+
+#   geom_point(position = pd)+
+#   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p)"))) +
+#   ylab('P-value, Perm_SD > True_SD') +
+#   labs(colour='Minimum\nNode Size') +
+#   theme(text = element_text(size=14)) #+ ggtitle('SD Difference between True and Permuted Validation Set')
+# 
+# p6 <- ggplot(dplyr::filter(testing_sd,node_size == 30000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
+#   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
+#   geom_line(position = pd)+
+#   geom_point(position = pd)+
+#   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
+#   ylab('Difference in SD') +
+#   labs(colour='Minimum\nNode Size') +
+#   theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set')
+# 
+# p7 <- ggplot(dplyr::filter(testing_sd,node_size == 40000),aes(x=-1*log10(p_thresh),y=mean_diff,colour=factor(node_size))) +
+#   geom_errorbar(aes(ymin=low_CI,ymax=high_CI),width=.1,position=pd)+
+#   geom_line(position = pd)+
+#   geom_point(position = pd)+
+#   xlab(expression(paste("Interaction Threshold, ","-log"[10],"(p-value)"))) +
+#   ylab('Difference in SD') +
+#   labs(colour='Minimum\nNode Size') +
+#   theme(text = element_text(size=14)) + ggtitle('SD Difference between True and Permuted Validation Set')
+# 
+# library(ggpubr)
+# #ggarrange(p2,p3,ncol=2,nrow=1,common.legend = T)
+# joined_df <- dplyr::inner_join(testing_sd,perm_sd,by=c('p_thresh'='p_thresh','node_size'='node_size')) %>% dplyr::select(p_thresh,node_size,'testing_sd'=sd.x,'testing_sd_low_CI'=low_CI.x,'testing_SD_high_CI'=high_CI.x,'perm_testing_sd'=sd.y,'perm_testing_sd_low_CI'=low_CI.y,'perm_testing_sd_high_CI'=high_CI.y,'sd_mean_diff'=mean_diff,'p(sd_perm > sd_testing)'=mean_p)
+# library(gridExtra)
+# joined_df <- signif(joined_df,3)
+# tbl <- tableGrob(joined_df)
 # grid.table(joined_df)

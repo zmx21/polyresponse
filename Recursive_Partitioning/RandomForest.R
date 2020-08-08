@@ -4,9 +4,9 @@
 #Output: .rds file for each tree.
 ####################################################################################
 
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
+source('../Recursive_Partitioning/InteractionTree.R')
+source('../Recursive_Partitioning/LoadDosage.R')
+source('../Recursive_Partitioning/ExtractSubsample.R')
 library(pbmcapply)
 library(partykit)
 library(parallel)

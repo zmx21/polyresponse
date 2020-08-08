@@ -5,9 +5,9 @@ library(parallel)
 library(data.table)
 library(pbmcapply)
 
-source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+source('../Load_Phenotype/Load_Phenotype.R')
+source('../Load_Bgen/LoadBgen.R')
+source('../SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 
 
 

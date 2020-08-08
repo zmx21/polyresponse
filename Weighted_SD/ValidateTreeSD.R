@@ -1,13 +1,14 @@
 ####################################################################################
+#PermutedPrediction.R should be called beforehand.  
 #Calculates training set treatment effects, and calcualtes the weighted standard deviation
 #Input: path to where random forests and dosage data is stored,the thresh used to construct the RF, and 
 #whether the true or permuted testing set should be used. 
 #Output: list of numerics (weighted sd)
 ####################################################################################
 
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/LoadDosage.R')
+source('../Recursive_Partitioning/InteractionTree.R')
+source('../Recursive_Partitioning/ExtractSubsample.R')
+source('../Recursive_Partitioning/LoadDosage.R')
 library(partykit)
 library(pbmcapply)
 #Compare training set and true testing set treatment effects
@@ -99,20 +100,12 @@ RunBetaErr <- function(resultPath,suffix,p_thresh,n_cores,perm,chunks='1:2000',M
   }
 }
 resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/rs12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-# args=(commandArgs(TRUE))
-# node_size <- as.numeric(args[[1]])
-# thresh <- args[[2]]
-# n_cores <- as.numeric(args[[3]])
-# MAF = args[[4]]
-# thresh <- c('6.5e-6','7e-6','7.5e-6','8e-6','9e-5') #c('5e-6','1e-5','3e-5','5e-5','7e-5','1e-4')
 MAF = '5e-2'
-# comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
-
-#node_size <- c(10000,20000,30000,40000)
-#thresh <- c('9e-6','7.5e-6','7.25e-6','7e-6','6.75e-6','6.5e-6','6e-6','5e-6','3e-6')
-#comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
-thresh <- '5e-6' #c('9e-6','7e-6','3e-6','9e-5','7e-5','5e-5','3e-5','1e-5')
-node_size <- 5000 #c(5000,10000,20000,30000,40000)
+node_size <- c(10000,20000,30000,40000)
+thresh <- c('9e-6','7.5e-6','7.25e-6','7e-6','6.75e-6','6.5e-6','6e-6','5e-6','3e-6')
+comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
+thresh <- c('9e-6','7e-6','3e-6','9e-5','7e-5','5e-5','3e-5','1e-5')
+node_size <- c(5000,10000,20000,30000,40000)
 comb <- expand.grid('node_size'=node_size,'thresh'=thresh)
 #comb <- rbind(comb,expand.grid('node_size'=node_size,'thresh'=thresh))
 

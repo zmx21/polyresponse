@@ -6,7 +6,7 @@
 #Input: chromosome to calculate metrics, assuming bgen files are organized by chr.
 #Output: files written in "./variant" within "path", containing output from qctool.
 ####################################################################################
-source('~/MRC_BSU_Internship/Load_Bgen/LoadBgen.R')
+source('../Load_Bgen/LoadBgen.R')
 CalcVariantQuality <- function(path,chr,n_cores){
   path_out <- paste0(path,'variants/','chr',chr,'/')
   system(paste0('mkdir -p ',path_out))

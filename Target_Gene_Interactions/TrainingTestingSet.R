@@ -1,4 +1,7 @@
-source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
+####################################################################################
+#Seperate UKB data into a training and testing set. Stores indices as RDS files.
+####################################################################################
+source('../Load_Phenotype/Load_Phenotype.R')
 GenerateTrainingTestSet <- function(splitFraction){
   path <-  '~/bsu_scratch/LDL_Project_Data/Genotype_Data/'
   sample_file_prefix <- 'ukbb_LDL_metadata_with_PC'

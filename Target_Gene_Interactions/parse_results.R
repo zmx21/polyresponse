@@ -2,7 +2,7 @@
 ####################################################################################
 #Parse GxG interaction results, keeping only rsid and p value.
 ####################################################################################
-source('~/MRC_BSU_Internship_LDL/Gene_Phenotype_Association/GetSNPsOfGene.R')
+source('../Gene_Phenotype_Association/GetSNPsOfGene.R')
 library(dplyr)
 library(data.table)
 library(qqman)

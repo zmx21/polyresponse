@@ -3,10 +3,10 @@
 #Input:Target gene name, upstream/downstream distance, phenotype, p-value threshold, and r2 threshold
 #Output: List of independent SNPs, with their invididual marignal effect
 ####################################################################################
-source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship_LDL/Gene_Phenotype_Association/GetSNPsOfGene.R')
-source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+source('../Load_Bgen/LoadBgen.R')
+source('../Load_Phenotype/Load_Phenotype.R')
+source('../Gene_Phenotype_Association/GetSNPsOfGene.R')
+source('../SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 
 library(RcppEigen)
 library(pbmcapply)

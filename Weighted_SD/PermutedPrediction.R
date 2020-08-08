@@ -1,10 +1,11 @@
 ####################################################################################
-#Apply RF to a list of permuted phenotype vector 
+#GeneratePermutedData.R should be called beforehand
+#Apply RF to a list of permuted dosage and covariate vector.
 #Input: p_value treshold (of predictors to include), and minimum node size of tree.
 #Output: .rds files containing predicted treatment effect of each leaf node
 ####################################################################################
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/ExtractSubsample.R')
-source('~/MRC_BSU_Internship_LDL/Recursive_Partitioning/InteractionTree.R')
+source('../Recursive_Partitioning/ExtractSubsample.R')
+source('../Recursive_Partitioning/InteractionTree.R')
 
 library(partykit)
 library(parallel)
@@ -70,24 +71,10 @@ RunPermutedPhenoPrediction <- function(resultPath,suffix,p_thresh,n_cores,tree_c
   #Load permuted phenotype vectors
   PermutedPhenoPrediction(testingSetData,paste0(resultPath,suffix),n_cores,tree_chunks,permVector)
 }
-
-# args=(commandArgs(TRUE))
-# node_size <- as.numeric(args[[1]])
-# thresh <- args[[2]]
-# n_cores <- as.numeric(args[[3]])
-# tree_chunks <- args[[4]]
-# MAF <- args[[5]]
-# node_size <- 30000
-# thresh <- '7e-6'
-# n_cores <- 1
 tree_chunks <- '1:2000'
 MAF <- '5e-2'
-# print(c('node_size'=node_size,'thresh'=thresh,'n_cores'=n_cores,'tree_chunks'=tree_chunks,'MAF'=MAF))
 resultPath <- '~/bsu_scratch/LDL_Project_Data_Aug2019/Random_Forest_Old/12916_rs17238484_rs5909_rs2303152_rs10066707_rs2006760_LDLdirect/'
-#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs12916_rs72633963_rs55727654_rs17648121_rs2303152_rs62366588_rs75240579_rs111353455_LDLdirect/'
-#resultPath <- '~/bsu_scratch/LDL_Project_Data/Random_Forest/rs11206510_rs2479409_rs2149041_rs2479394_rs10888897_rs7552841_rs562556_LDLdirect/'
 n_cores <- 10
-
 node_size <- c(10000,20000,30000,40000)
 thresh <- c('7.5e-6','7.25e-6','6.75e-6','6.5e-6','6e-6')
 comb <- expand.grid(node_size,thresh)

@@ -1,6 +1,6 @@
 ####################################################################################
 #Main function to run genomewide GxG interactions.
-#Input: As listed in  message below (line 152)
+#Input: As listed in  message below 
 #Output: Text file with GxG interaction information, written to a text file in specified path
 ####################################################################################
 
@@ -11,10 +11,10 @@ library(data.table)
 library(pbmcapply)
 library(dbplyr)
 
-source('~/MRC_BSU_Internship_LDL/Target_Gene_Interactions/CalcInteractions.R')
-source('~/MRC_BSU_Internship_LDL/Load_Bgen/LoadBgen.R')
-source('~/MRC_BSU_Internship_LDL/Load_Phenotype/Load_Phenotype.R')
-source('~/MRC_BSU_Internship_LDL/SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
+source('../Target_Gene_Interactions/CalcInteractions.R')
+source('../Load_Bgen/LoadBgen.R')
+source('../Load_Phenotype/Load_Phenotype.R')
+source('../SNP_Phenotype_Association/CalcSnpPhenoAssociation.R')
 
 #Main function, which calculates GxG interactions with target SNP, in chunks.
 RunGxGInteractions <- function(path,sample_file_prefix,bgen_file_prefix,chr,phenotype,targetRS,path_out,eur_only,cov,PC,med,MAF,Info,n_cores,chunks,training_set){
