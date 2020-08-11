@@ -1,5 +1,5 @@
 # Polygenic modelling of treatment effect heterogeneity
-ZM Xu, S Burgess (2020) "Polygenic modelling of treatment effect heterogeneity" Genetic Epidemiology. https://doi.org/10.1002/gepi.22347
+Xu, ZM, Burgess, S. Polygenic modelling of treatment effect heterogeneity. Genetic Epidemiology. 2020; 1– 12. https://doi.org/10.1002/gepi.22347
 ## Data Availability 
 Summary statistics of genome-wide interaction study and RFIT files availiable at: https://doi.org/10.5281/zenodo.3975035
 ## Usage
